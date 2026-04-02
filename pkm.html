@@ -233,6 +233,27 @@
             color: #FFD700
         }
 
+        .hint {
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            color: rgba(255, 255, 255, .7);
+            font-size: .85em;
+            line-height: 1.6;
+            text-align: left;
+            min-height: 44px;
+        }
+
+        .hint-label {
+            color: #FFD700;
+            font-weight: 700;
+            font-size: .75em;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
 /* 4지선다 버튼 */
         .choices {
             display: grid;
@@ -426,6 +447,11 @@
 
             <div class="pname" id="pname">？ ？ ？ ？</div>
 
+            <div class="hint" id="hint">
+                <div class="hint-label">📖 도감 설명</div>
+                <div id="hintText"></div>
+            </div>
+
             <div class="choices" id="choices">
                 <button class="cbtn"></button>
                 <button class="cbtn"></button>
@@ -443,6 +469,7 @@
     </div>
 
     <script src="pkm_data.js"></script>
+    <script src="pkm_hints.js"></script>
     <script>
         // 이름에서 폼 접미사 제거 (보기 표시용)
         function displayName(n) {
@@ -459,7 +486,8 @@
         const pnum = $('pnum'), pimgEl = $('pimg'),
             ldEl = $('ld'), ierrEl = $('ierr'), pnameEl = $('pname'),
             choicesEl = $('choices'),
-            fbEl = $('fb'), nxtEl = $('nxt');
+            fbEl = $('fb'), nxtEl = $('nxt'),
+            hintText = $('hintText');
         const cbtns = choicesEl.querySelectorAll('.cbtn');
 
         // 세대 필터
@@ -584,6 +612,14 @@
                 btn.className = 'cbtn';
                 btn.onclick = () => onChoice(i);
             });
+
+            // 힌트 세팅
+            const hints = typeof HINTS !== 'undefined' ? HINTS[cur.id] : null;
+            if (hints && hints.length > 0) {
+                hintText.textContent = hints[Math.floor(Math.random() * hints.length)];
+            } else {
+                hintText.textContent = '도감 설명이 없습니다.';
+            }
 
             loadImg(cur.f);
         }
