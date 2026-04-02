@@ -482,6 +482,36 @@
         let pool = [...PD], cur = null, ans = false;
         let correct = 0, total = 0, streak = 0;
 
+        // 레트로 사운드 (Web Audio API)
+        const actx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, dur, type = 'square', vol = 0.12) {
+            const o = actx.createOscillator();
+            const g = actx.createGain();
+            o.type = type;
+            o.frequency.value = freq;
+            g.gain.value = vol;
+            g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
+            o.connect(g); g.connect(actx.destination);
+            o.start(); o.stop(actx.currentTime + dur);
+        }
+        function sfxCorrect() {
+            playTone(523, 0.1); // C5
+            setTimeout(() => playTone(659, 0.1), 80);  // E5
+            setTimeout(() => playTone(784, 0.15), 160); // G5
+            setTimeout(() => playTone(1047, 0.25), 240); // C6
+        }
+        function sfxWrong() {
+            playTone(200, 0.15, 'sawtooth', 0.1);
+            setTimeout(() => playTone(160, 0.25, 'sawtooth', 0.1), 120);
+        }
+        function sfxClick() {
+            playTone(880, 0.06, 'square', 0.08);
+        }
+        function sfxNext() {
+            playTone(440, 0.07, 'triangle', 0.1);
+            setTimeout(() => playTone(660, 0.07, 'triangle', 0.1), 60);
+        }
+
         const $ = id => document.getElementById(id);
         const pnum = $('pnum'), pimgEl = $('pimg'),
             ldEl = $('ld'), ierrEl = $('ierr'), pnameEl = $('pname'),
@@ -577,6 +607,7 @@
                 pimgEl.classList.add('pop');
                 setTimeout(() => pimgEl.classList.remove('pop'), 450);
                 confetti();
+                sfxCorrect();
             } else {
                 streak = 0;
                 $('ss').textContent = 0;
@@ -585,6 +616,7 @@
                 fbEl.className = 'fb no fadeup';
                 picked.classList.add('shake');
                 setTimeout(() => picked.classList.remove('shake'), 350);
+                sfxWrong();
             }
 
             nxtEl.style.display = 'inline-block';
@@ -610,7 +642,7 @@
             cbtns.forEach((btn, i) => {
                 btn.textContent = options[i];
                 btn.className = 'cbtn';
-                btn.onclick = () => onChoice(i);
+                btn.onclick = () => { sfxClick(); onChoice(i); };
             });
 
             // 힌트 세팅
@@ -642,14 +674,16 @@
         // 키보드 단축키 (1~4로 선택, Enter/Space로 다음)
         document.addEventListener('keydown', e => {
             if (!ans && e.key >= '1' && e.key <= '4') {
+                sfxClick();
                 onChoice(+e.key - 1);
             } else if (ans && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault();
+                sfxNext();
                 nextPoke();
             }
         });
 
-        $('nxt').addEventListener('click', nextPoke);
+        $('nxt').addEventListener('click', () => { sfxNext(); nextPoke(); });
 
         // 시작
         nextPoke();
