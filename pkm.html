@@ -515,45 +515,58 @@
         let correct = 0, total = 0, streak = 0;
 
         // 레트로 사운드 (Web Audio API) - 크로스 브라우저
-        let actx = null;
-        let bgmGain = null;
-        let audioUnlocked = false;
+        var actx = null;
+        var bgmGain = null;
+        var audioReady = false;
 
-        function ensureAudio() {
-            if (!actx) {
-                var AC = window.AudioContext || window.webkitAudioContext;
-                if (!AC) return false;
-                actx = new AC();
-                bgmGain = actx.createGain();
-                bgmGain.gain.value = 1;
-                bgmGain.connect(actx.destination);
-            }
-            if (actx.state === 'suspended') {
-                actx.resume().catch(function() {});
-            }
-            return true;
+        function initAudio() {
+            if (actx) return;
+            var AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            actx = new AC();
+            bgmGain = actx.createGain();
+            bgmGain.gain.value = 1;
+            bgmGain.connect(actx.destination);
         }
 
-        // iOS/Android: 첫 사용자 제스처에서 AudioContext 활성화
+        // iOS Safari: 사용자 제스처 안에서 resume + 무음 재생
         function unlockAudio() {
-            if (audioUnlocked) return;
-            if (!ensureAudio()) return;
-            // iOS Safari는 빈 버퍼를 재생해야 완전히 unlock됨
-            var buf = actx.createBuffer(1, 1, 22050);
-            var src = actx.createBufferSource();
-            src.buffer = buf;
-            src.connect(actx.destination);
-            src.start(0);
-            audioUnlocked = true;
+            if (audioReady) return;
+            initAudio();
+            if (!actx) return;
+
+            // resume은 반드시 제스처 핸들러 안에서
+            var p = actx.resume();
+            if (p && p.then) p.then(function(){}).catch(function(){});
+
+            // iOS는 OscillatorNode를 한번 재생해야 완전 unlock
+            try {
+                var o = actx.createOscillator();
+                var g = actx.createGain();
+                g.gain.value = 0; // 무음
+                o.connect(g);
+                g.connect(actx.destination);
+                o.start(0);
+                o.stop(actx.currentTime + 0.001);
+            } catch(e) {}
+
+            audioReady = true;
         }
+
+        // 모든 사용자 제스처 타입에서 unlock 시도
         ['touchstart', 'touchend', 'mousedown', 'click', 'keydown'].forEach(function(evt) {
-            document.addEventListener(evt, unlockAudio, { once: false, passive: true });
+            document.addEventListener(evt, unlockAudio, true);
         });
 
         function playTone(freq, dur, type, vol) {
-            if (!actx) return;
+            if (!actx || !audioReady) return;
             type = type || 'square';
             vol = vol || 0.12;
+            // iOS에서 suspended 상태면 재시도
+            if (actx.state === 'suspended') {
+                var p = actx.resume();
+                if (p && p.then) p.then(function(){}).catch(function(){});
+            }
             try {
                 var t = actx.currentTime;
                 var o = actx.createOscillator();
@@ -665,7 +678,8 @@
 
         function bgmStart() {
             if (bgmPlaying) return;
-            if (!ensureAudio()) return;
+            unlockAudio();
+            if (!actx || !bgmGain) return;
             bgmPlaying = true;
             bgmGain.gain.cancelScheduledValues(actx.currentTime);
             bgmGain.gain.setValueAtTime(1, actx.currentTime);
