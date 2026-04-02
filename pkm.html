@@ -516,6 +516,10 @@
 
         // 레트로 사운드 (Web Audio API)
         const actx = new (window.AudioContext || window.webkitAudioContext)();
+        const bgmGain = actx.createGain();
+        bgmGain.gain.value = 1;
+        bgmGain.connect(actx.destination);
+
         function playTone(freq, dur, type = 'square', vol = 0.12) {
             const o = actx.createOscillator();
             const g = actx.createGain();
@@ -595,7 +599,7 @@
                     g.gain.value = 0.06;
                     g.gain.setValueAtTime(0.06, mTime);
                     g.gain.exponentialRampToValueAtTime(0.001, mTime + dur * beatSec * 0.9);
-                    o.connect(g); g.connect(actx.destination);
+                    o.connect(g); g.connect(bgmGain);
                     o.start(mTime);
                     o.stop(mTime + dur * beatSec);
                 }
@@ -612,7 +616,7 @@
                     g.gain.value = 0.05;
                     g.gain.setValueAtTime(0.05, bTime);
                     g.gain.exponentialRampToValueAtTime(0.001, bTime + dur * beatSec * 0.85);
-                    o.connect(g); g.connect(actx.destination);
+                    o.connect(g); g.connect(bgmGain);
                     o.start(bTime);
                     o.stop(bTime + dur * beatSec);
                 }
@@ -625,6 +629,7 @@
         function bgmStart() {
             if (bgmPlaying) return;
             bgmPlaying = true;
+            bgmGain.gain.value = 1;
             if (actx.state === 'suspended') actx.resume();
             const loopLen = bgmSchedule();
             bgmInterval = setInterval(() => {
@@ -634,6 +639,8 @@
 
         function bgmStop() {
             bgmPlaying = false;
+            bgmGain.gain.cancelScheduledValues(actx.currentTime);
+            bgmGain.gain.setValueAtTime(0, actx.currentTime);
             if (bgmInterval) { clearInterval(bgmInterval); bgmInterval = null; }
         }
 
