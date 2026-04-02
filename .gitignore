@@ -1,0 +1,5 @@
+*.jpeg
+*.jpg
+remove_bg.py
+__pycache__/
+.DS_Store

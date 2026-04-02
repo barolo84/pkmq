@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>이 포켓몬은 누구?!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+            background: #1c2b4a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 14px 12px 30px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(1.5px 1.5px at 15% 25%, #fff, transparent),
+                radial-gradient(1px 1px at 35% 65%, rgba(255, 255, 255, .7), transparent),
+                radial-gradient(1.5px 1.5px at 55% 15%, #fff, transparent),
+                radial-gradient(1px 1px at 75% 55%, rgba(255, 255, 255, .6), transparent),
+                radial-gradient(1px 1px at 85% 85%, rgba(255, 255, 255, .8), transparent),
+                radial-gradient(1.5px 1.5px at 8% 75%, rgba(255, 255, 255, .5), transparent),
+                radial-gradient(1px 1px at 92% 40%, rgba(255, 255, 255, .7), transparent),
+                radial-gradient(1px 1px at 45% 90%, rgba(255, 255, 255, .4), transparent),
+                radial-gradient(1.5px 1.5px at 65% 80%, rgba(255, 255, 255, .6), transparent);
+            z-index: 0;
+        }
+
+        .wrap {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px
+        }
+
+        .hdr {
+            text-align: center
+        }
+
+        .hdr h1 {
+            font-size: 1.85em;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 0 0 16px rgba(255, 215, 0, .4), 2px 2px 0 #7a5f00;
+            letter-spacing: -0.5px
+        }
+
+        .hdr p {
+            color: rgba(255, 255, 255, .5);
+            font-size: .82em;
+            margin-top: 3px
+        }
+
+        .gens {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center
+        }
+
+        .gbtn {
+            padding: 5px 13px;
+            border: 2px solid rgba(255, 215, 0, .4);
+            background: transparent;
+            color: rgba(255, 215, 0, .6);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: .78em;
+            font-weight: 700;
+            transition: .2s;
+            font-family: inherit;
+        }
+
+        .gbtn:hover {
+            border-color: #FFD700;
+            color: #FFD700
+        }
+
+        .gbtn.on {
+            background: #FFD700;
+            border-color: #FFD700;
+            color: #1c2b4a
+        }
+
+        .scores {
+            display: flex;
+            gap: 0;
+            background: rgba(255, 255, 255, .07);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .sc {
+            flex: 1;
+            text-align: center;
+            padding: 10px 6px;
+            border-right: 1px solid rgba(255, 255, 255, .1)
+        }
+
+        .sc:last-child {
+            border-right: none
+        }
+
+        .sv {
+            font-size: 1.5em;
+            font-weight: 900;
+            color: #FFD700;
+            line-height: 1
+        }
+
+        .sl {
+            font-size: .68em;
+            color: rgba(255, 255, 255, .45);
+            margin-top: 2px
+        }
+
+        .fire {
+            color: #ff6b35
+        }
+
+        .card {
+            background: rgba(255, 255, 255, .07);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 22px;
+            padding: 20px 18px;
+            text-align: center;
+        }
+
+        .pnum {
+            color: rgba(255, 255, 255, .35);
+            font-size: .82em;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 8px
+        }
+
+        .imgbox {
+            width: 210px;
+            height: 210px;
+            margin: 0 auto 14px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #243a6e, #142040);
+            box-shadow: 0 0 30px rgba(255, 215, 0, .12), inset 0 0 20px rgba(0, 0, 0, .3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .imgbox::after {
+            content: '';
+            position: absolute;
+            inset: 5px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255, 255, 255, .07);
+            pointer-events: none;
+        }
+
+        .pimg {
+            width: 180px;
+            height: 180px;
+            object-fit: contain;
+            transition: filter .5s ease;
+            image-rendering: auto;
+        }
+
+        .pimg.sil {
+            filter: brightness(0) drop-shadow(0 0 4px rgba(0, 0, 0, .3))
+        }
+
+        .pimg.show {
+            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .4))
+        }
+
+        .ld {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            border: 3px solid rgba(255, 255, 255, .1);
+            border-top-color: #FFD700;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .img-err {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255, 255, 255, .4);
+            font-size: .8em;
+        }
+
+        .img-err .em {
+            font-size: 2.5em
+        }
+
+        .pname {
+            font-size: 1.55em;
+            font-weight: 900;
+            min-height: 40px;
+            color: white;
+            letter-spacing: 2px;
+            margin-bottom: 14px;
+        }
+
+        .pname.ans {
+            color: #FFD700
+        }
+
+/* 4지선다 버튼 */
+        .choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .cbtn {
+            padding: 13px 10px;
+            border: 2px solid rgba(255, 255, 255, .18);
+            background: rgba(255, 255, 255, .07);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: .95em;
+            font-weight: 700;
+            font-family: inherit;
+            transition: .2s;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            word-break: keep-all;
+        }
+
+        .cbtn:hover:not(.picked) {
+            border-color: #FFD700;
+            background: rgba(255, 215, 0, .1);
+            color: #FFD700;
+            transform: scale(1.02);
+        }
+
+        .cbtn:active:not(.picked) {
+            transform: scale(.97)
+        }
+
+        .cbtn.correct {
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, .2);
+            color: #4ade80;
+        }
+
+        .cbtn.wrong {
+            border-color: #f87171;
+            background: rgba(248, 113, 113, .15);
+            color: #f87171;
+        }
+
+        .cbtn.dim {
+            opacity: .35;
+            pointer-events: none;
+        }
+
+        .cbtn.picked {
+            pointer-events: none;
+        }
+
+        .fb {
+            min-height: 26px;
+            font-weight: 700;
+            font-size: .95em;
+            margin-bottom: 10px
+        }
+
+        .fb.ok {
+            color: #4ade80
+        }
+
+        .fb.no {
+            color: #f87171
+        }
+
+        .brow {
+            display: flex;
+            gap: 8px;
+            justify-content: center
+        }
+
+        .nxt {
+            display: none;
+            padding: 10px 28px;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            border: none;
+            border-radius: 10px;
+            color: #0f2e0f;
+            font-weight: 900;
+            font-size: .95em;
+            cursor: pointer;
+            font-family: inherit;
+            transition: .2s;
+        }
+
+        .nxt:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 12px rgba(74, 222, 128, .35)
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) }
+            20% { transform: translateX(-7px) }
+            40% { transform: translateX(7px) }
+            60% { transform: translateX(-5px) }
+            80% { transform: translateX(5px) }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1) }
+            40% { transform: scale(1.22) }
+            70% { transform: scale(.97) }
+            100% { transform: scale(1) }
+        }
+
+        @keyframes fadeup {
+            from { opacity: 0; transform: translateY(8px) }
+            to { opacity: 1; transform: translateY(0) }
+        }
+
+        .shake { animation: shake .35s ease }
+        .pop { animation: pop .45s ease }
+        .fadeup { animation: fadeup .35s ease }
+
+        .cf {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            border-radius: 2px
+        }
+
+        @keyframes cfall {
+            0% { transform: translateY(-20px) rotate(0deg); opacity: 1 }
+            100% { transform: translateY(105vh) rotate(720deg); opacity: 0 }
+        }
+
+        @media(max-width:380px) {
+            .hdr h1 { font-size: 1.5em }
+            .imgbox { width: 180px; height: 180px }
+            .pimg { width: 155px; height: 155px }
+            .cbtn { font-size: .85em; padding: 10px 8px }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <div class="hdr">
+            <h1>🔴 이 포켓몬은 누구?! 🔴</h1>
+            <p>실루엣을 보고 이름을 맞춰보세요!</p>
+        </div>
+
+        <div class="gens" id="gens">
+            <button class="gbtn on" data-g="0">전체</button>
+            <button class="gbtn" data-g="1">1세대</button>
+            <button class="gbtn" data-g="2">2세대</button>
+            <button class="gbtn" data-g="3">3세대</button>
+            <button class="gbtn" data-g="4">4세대</button>
+            <button class="gbtn" data-g="5">5세대</button>
+            <button class="gbtn" data-g="6">6세대</button>
+            <button class="gbtn" data-g="7">7세대</button>
+            <button class="gbtn" data-g="8">8세대</button>
+        </div>
+
+        <div class="scores">
+            <div class="sc">
+                <div class="sv" id="sc">0</div>
+                <div class="sl">✅ 정답</div>
+            </div>
+            <div class="sc">
+                <div class="sv" id="st">0</div>
+                <div class="sl">🎯 시도</div>
+            </div>
+            <div class="sc">
+                <div class="sv fire" id="ss">0</div>
+                <div class="sl">🔥 연속</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="pnum" id="pnum">No.000</div>
+
+            <div class="imgbox" id="imgbox">
+                <div class="ld" id="ld"></div>
+                <img id="pimg" class="pimg sil" style="display:none" alt="포켓몬" />
+                <div class="img-err" id="ierr">
+                    <div class="em">❓</div>
+                    <div>이미지 없음</div>
+                </div>
+            </div>
+
+            <div class="pname" id="pname">？ ？ ？ ？</div>
+
+            <div class="choices" id="choices">
+                <button class="cbtn"></button>
+                <button class="cbtn"></button>
+                <button class="cbtn"></button>
+                <button class="cbtn"></button>
+            </div>
+
+            <div class="fb" id="fb"></div>
+
+            <div class="brow">
+                <button class="nxt" id="nxt">다음 ▶</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="pkm_data.js"></script>
+    <script>
+        // 이름에서 폼 접미사 제거 (보기 표시용)
+        function displayName(n) {
+            return n.replace(/_.*$/, '');
+        }
+
+        // 고유 이름 목록 (보기 생성용)
+        const uniqueNames = [...new Set(PD.map(p => displayName(p.n)))];
+
+        let pool = [...PD], cur = null, ans = false;
+        let correct = 0, total = 0, streak = 0;
+
+        const $ = id => document.getElementById(id);
+        const pnum = $('pnum'), pimgEl = $('pimg'),
+            ldEl = $('ld'), ierrEl = $('ierr'), pnameEl = $('pname'),
+            choicesEl = $('choices'),
+            fbEl = $('fb'), nxtEl = $('nxt');
+        const cbtns = choicesEl.querySelectorAll('.cbtn');
+
+        // 세대 필터
+        document.getElementById('gens').addEventListener('click', e => {
+            const btn = e.target.closest('.gbtn');
+            if (!btn) return;
+            document.querySelectorAll('.gbtn').forEach(b => b.classList.remove('on'));
+            btn.classList.add('on');
+            const g = +btn.dataset.g;
+            pool = g === 0 ? [...PD] : PD.filter(p => p.g === g);
+            correct = 0; total = 0; streak = 0;
+            $('sc').textContent = 0;
+            $('st').textContent = 0;
+            $('ss').textContent = 0;
+            nextPoke();
+        });
+
+        // 이미지 로드
+        function loadImg(filepath) {
+            ldEl.style.display = 'block';
+            pimgEl.style.display = 'none';
+            pimgEl.className = 'pimg sil';
+            ierrEl.style.display = 'none';
+            pimgEl.src = 'images/' + filepath;
+        }
+        pimgEl.onload = function () {
+            ldEl.style.display = 'none';
+            ierrEl.style.display = 'none';
+            pimgEl.style.display = 'block';
+        };
+        pimgEl.onerror = function () {
+            ldEl.style.display = 'none';
+            ierrEl.style.display = 'flex';
+        };
+
+        // 4지선다 보기 생성
+        function makeChoices(correctName) {
+            const cName = displayName(correctName);
+            const wrongs = [];
+            const used = new Set([cName]);
+            while (wrongs.length < 3) {
+                const pick = uniqueNames[Math.floor(Math.random() * uniqueNames.length)];
+                if (!used.has(pick)) {
+                    used.add(pick);
+                    wrongs.push(pick);
+                }
+            }
+            const options = [cName, ...wrongs];
+            // 셔플
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+            return options;
+        }
+
+        // 보기 클릭
+        function onChoice(idx) {
+            if (ans) return;
+            ans = true;
+            total++;
+            $('st').textContent = total;
+
+            const picked = cbtns[idx];
+            const correctName = displayName(cur.n);
+            const isCorrect = picked.textContent === correctName;
+
+            // 모든 버튼 비활성화 + 정답 표시
+            cbtns.forEach(btn => {
+                btn.classList.add('picked');
+                if (btn.textContent === correctName) {
+                    btn.classList.add('correct');
+                } else if (btn === picked && !isCorrect) {
+                    btn.classList.add('wrong');
+                } else {
+                    btn.classList.add('dim');
+                }
+            });
+
+            if (isCorrect) {
+                correct++; streak++;
+                $('sc').textContent = correct;
+                $('ss').textContent = streak;
+                reveal();
+                fbEl.textContent = streak >= 3 ? `🎉 정답! ${streak}연속 완벽해요! 🔥` : '🎉 정답! 맞췄어요!';
+                fbEl.className = 'fb ok fadeup';
+                pimgEl.classList.add('pop');
+                setTimeout(() => pimgEl.classList.remove('pop'), 450);
+                confetti();
+            } else {
+                streak = 0;
+                $('ss').textContent = 0;
+                reveal();
+                fbEl.textContent = `❌ 아쉬워요! 정답은 "${correctName}"`;
+                fbEl.className = 'fb no fadeup';
+                picked.classList.add('shake');
+                setTimeout(() => picked.classList.remove('shake'), 350);
+            }
+
+            nxtEl.style.display = 'inline-block';
+        }
+
+        function reveal() {
+            pimgEl.className = 'pimg show fadeup';
+            pnameEl.textContent = displayName(cur.n);
+            pnameEl.className = 'pname ans fadeup';
+        }
+
+        function nextPoke() {
+            ans = false;
+            cur = pool[Math.floor(Math.random() * pool.length)];
+            pnum.textContent = `No.${String(cur.id).padStart(3, '0')}`;
+            pnameEl.textContent = '？ ？ ？ ？';
+            pnameEl.className = 'pname';
+            fbEl.textContent = ''; fbEl.className = 'fb';
+            nxtEl.style.display = 'none';
+
+            // 보기 세팅
+            const options = makeChoices(cur.n);
+            cbtns.forEach((btn, i) => {
+                btn.textContent = options[i];
+                btn.className = 'cbtn';
+                btn.onclick = () => onChoice(i);
+            });
+
+            loadImg(cur.f);
+        }
+
+        function confetti() {
+            const cls = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFC0CB', '#DDA0DD'];
+            for (let i = 0; i < 45; i++) {
+                const el = document.createElement('div');
+                el.className = 'cf';
+                const sz = 6 + Math.random() * 6;
+                el.style.cssText = `left:${Math.random() * 100}vw;top:-12px;width:${sz}px;height:${sz}px;
+      background:${cls[Math.floor(Math.random() * cls.length)]};
+      border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+      animation:cfall ${0.9 + Math.random() * 1.4}s ease ${Math.random() * 0.5}s forwards`;
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 2800);
+            }
+        }
+
+        // 키보드 단축키 (1~4로 선택, Enter/Space로 다음)
+        document.addEventListener('keydown', e => {
+            if (!ans && e.key >= '1' && e.key <= '4') {
+                onChoice(+e.key - 1);
+            } else if (ans && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                nextPoke();
+            }
+        });
+
+        $('nxt').addEventListener('click', nextPoke);
+
+        // 시작
+        nextPoke();
+    </script>
+</body>
+
+</html>
