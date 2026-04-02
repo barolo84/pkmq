@@ -520,6 +520,13 @@
         bgmGain.gain.value = 1;
         bgmGain.connect(actx.destination);
 
+        // iOS Safari: 첫 터치에서 AudioContext 활성화
+        function unlockAudio() {
+            if (actx.state === 'suspended') actx.resume();
+        }
+        document.addEventListener('touchstart', unlockAudio, { once: true });
+        document.addEventListener('click', unlockAudio, { once: true });
+
         function playTone(freq, dur, type = 'square', vol = 0.12) {
             const o = actx.createOscillator();
             const g = actx.createGain();
