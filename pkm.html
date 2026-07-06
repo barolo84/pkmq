@@ -508,8 +508,13 @@
             return n.replace(/_.*$/, '');
         }
 
-        // 고유 이름 목록 (보기 생성용)
+        // 고유 이름 목록 (보기 생성용) — 전체 + 세대별
         const uniqueNames = [...new Set(PD.map(p => displayName(p.n)))];
+        const namesByGen = {};
+        PD.forEach(p => {
+            (namesByGen[p.g] ??= new Set()).add(displayName(p.n));
+        });
+        for (const g in namesByGen) namesByGen[g] = [...namesByGen[g]];
 
         let pool = [...PD], cur = null, ans = false;
         let correct = 0, total = 0, streak = 0;
@@ -726,13 +731,15 @@
             ierrEl.style.display = 'flex';
         };
 
-        // 4지선다 보기 생성
-        function makeChoices(correctName) {
+        // 4지선다 보기 생성 (오답은 같은 세대에서 우선 선택)
+        function makeChoices(correctName, gen) {
             const cName = displayName(correctName);
+            const genNames = namesByGen[gen] || [];
+            const source = genNames.length >= 4 ? genNames : uniqueNames;
             const wrongs = [];
             const used = new Set([cName]);
             while (wrongs.length < 3) {
-                const pick = uniqueNames[Math.floor(Math.random() * uniqueNames.length)];
+                const pick = source[Math.floor(Math.random() * source.length)];
                 if (!used.has(pick)) {
                     used.add(pick);
                     wrongs.push(pick);
@@ -797,21 +804,27 @@
 
         function reveal() {
             pimgEl.className = 'pimg show fadeup';
+            pnum.textContent = `No.${String(cur.id).padStart(3, '0')}`;
             pnameEl.textContent = displayName(cur.n);
             pnameEl.className = 'pname ans fadeup';
         }
 
         function nextPoke() {
             ans = false;
-            cur = pool[Math.floor(Math.random() * pool.length)];
-            pnum.textContent = `No.${String(cur.id).padStart(3, '0')}`;
+            // 직전 문제와 같은 포켓몬 연속 출제 방지
+            let pick;
+            do {
+                pick = pool[Math.floor(Math.random() * pool.length)];
+            } while (pool.length > 1 && cur && pick.id === cur.id && pick.n === cur.n);
+            cur = pick;
+            pnum.textContent = 'No.???';
             pnameEl.textContent = '？ ？ ？ ？';
             pnameEl.className = 'pname';
             fbEl.textContent = ''; fbEl.className = 'fb';
             nxtEl.style.display = 'none';
 
             // 보기 세팅
-            const options = makeChoices(cur.n);
+            const options = makeChoices(cur.n, cur.g);
             cbtns.forEach((btn, i) => {
                 btn.textContent = options[i];
                 btn.className = 'cbtn';
