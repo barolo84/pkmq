@@ -68,6 +68,39 @@
             margin-top: 3px
         }
 
+        .gens-wrap { position: relative }
+
+        .garr {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 2;
+            width: 28px;
+            height: 100%;
+            border: none;
+            color: #FFD700;
+            font-size: 1.25em;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-family: inherit;
+        }
+
+        .garr.left {
+            left: 0;
+            background: linear-gradient(90deg, #1c2b4a 45%, transparent)
+        }
+
+        .garr.right {
+            right: 0;
+            background: linear-gradient(270deg, #1c2b4a 45%, transparent)
+        }
+
+        .garr.hide { display: none }
+
         .gens {
             display: flex;
             gap: 6px;
@@ -79,10 +112,6 @@
         }
 
         .gens::-webkit-scrollbar { display: none }
-
-        /* 공간이 남으면 가운데 정렬, 넘치면 자연스럽게 스크롤 */
-        .gbtn:first-child { margin-left: auto }
-        .gbtn:last-child { margin-right: auto }
 
         .gbtn {
             padding: 8px 15px;
@@ -521,20 +550,82 @@
 
         .abtn:hover { transform: scale(1.05) }
 
-        /* 리더보드 */
-        .board {
+        /* 리더보드 모달 */
+        .board-ov {
             display: none;
-            background: rgba(255, 255, 255, .07);
-            border: 1px solid rgba(255, 255, 255, .12);
+            position: fixed;
+            inset: 0;
+            z-index: 9500;
+            background: rgba(10, 16, 35, .72);
+            backdrop-filter: blur(3px);
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+
+        .board {
+            width: 100%;
+            max-width: 420px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: #1e2f55;
+            border: 1px solid rgba(255, 215, 0, .35);
             border-radius: 22px;
-            padding: 16px 18px;
+            padding: 16px 18px 18px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, .6);
+            animation: fadeup .25s ease;
+        }
+
+        .board-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
         }
 
         .board-title {
             font-weight: 900;
             color: #FFD700;
-            text-align: center;
-            margin-bottom: 10px
+        }
+
+        .board-x {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, .55);
+            font-size: 1.15em;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 2px 8px;
+            font-family: inherit;
+        }
+
+        .board-x:hover { color: #fff }
+
+        .brd-row.me {
+            background: rgba(255, 215, 0, .1);
+            border: 1px solid rgba(255, 215, 0, .45);
+            border-radius: 10px;
+        }
+
+        .board-reset {
+            margin-top: 12px;
+            width: 100%;
+            padding: 8px;
+            background: none;
+            border: 1px dashed rgba(248, 113, 113, .4);
+            color: rgba(248, 113, 113, .75);
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: .82em;
+            font-weight: 700;
+            transition: .2s;
+        }
+
+        .board-reset.arm {
+            background: rgba(248, 113, 113, .15);
+            border-style: solid;
+            color: #f87171;
         }
 
         .brd-row {
@@ -724,16 +815,20 @@
             <p>실루엣을 보고 이름을 맞춰보세요!</p>
         </div>
 
-        <div class="gens" id="gens">
-            <button class="gbtn on" data-g="0">전체</button>
-            <button class="gbtn" data-g="1">1세대</button>
-            <button class="gbtn" data-g="2">2세대</button>
-            <button class="gbtn" data-g="3">3세대</button>
-            <button class="gbtn" data-g="4">4세대</button>
-            <button class="gbtn" data-g="5">5세대</button>
-            <button class="gbtn" data-g="6">6세대</button>
-            <button class="gbtn" data-g="7">7세대</button>
-            <button class="gbtn" data-g="8">8세대</button>
+        <div class="gens-wrap">
+            <button class="garr left hide" id="gArrL">‹</button>
+            <div class="gens" id="gens">
+                <button class="gbtn on" data-g="0">전체</button>
+                <button class="gbtn" data-g="1">1세대</button>
+                <button class="gbtn" data-g="2">2세대</button>
+                <button class="gbtn" data-g="3">3세대</button>
+                <button class="gbtn" data-g="4">4세대</button>
+                <button class="gbtn" data-g="5">5세대</button>
+                <button class="gbtn" data-g="6">6세대</button>
+                <button class="gbtn" data-g="7">7세대</button>
+                <button class="gbtn" data-g="8">8세대</button>
+            </div>
+            <button class="garr right hide" id="gArrR">›</button>
         </div>
 
         <div class="modes">
@@ -815,11 +910,17 @@
             </div>
         </div>
 
-        <div class="board" id="board">
-            <div class="board-title">🏆 타임어택 TOP 10</div>
-            <div id="boardList"></div>
-        </div>
+    </div>
 
+    <div class="board-ov" id="boardOv">
+        <div class="board">
+            <div class="board-head">
+                <div class="board-title">🏆 타임어택 TOP 10</div>
+                <button class="board-x" id="boardX">✕</button>
+            </div>
+            <div id="boardList"></div>
+            <button class="board-reset" id="boardReset">🗑 기록 초기화</button>
+        </div>
     </div>
 
     <div id="flash"></div>
@@ -1259,7 +1360,7 @@
             ans = true; // 카운트다운 중 입력 차단
             $('mTa').classList.add('on'); $('mNormal').classList.remove('on');
             $('taEnd').style.display = 'none';
-            $('board').style.display = 'none';
+            closeBoard();
             choicesEl.style.display = 'grid';
             $('hint').style.display = 'block';
             resetStats();
@@ -1323,8 +1424,6 @@
             $('taTitle').textContent = qualifies ? '🎉 TOP 10 진입!' : '⏱️ 타임어택 종료!';
             if (qualifies) $('nameInput').value = lsGet('pkmq_name', '');
             $('taEnd').style.display = 'block';
-            renderBoard();
-            $('board').style.display = 'block';
             sfxNext();
         }
 
@@ -1334,7 +1433,7 @@
                 ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
 
-        function renderBoard() {
+        function renderBoard(hl = -1) {
             const board = loadBoard();
             if (!board.length) {
                 $('boardList').innerHTML = '<div class="board-empty">아직 기록이 없어요. 타임어택에 도전해보세요!</div>';
@@ -1342,7 +1441,7 @@
             }
             const medals = ['🥇', '🥈', '🥉'];
             $('boardList').innerHTML = board.map((r, i) =>
-                `<div class="brd-row${i < 3 ? ' top' : ''}">
+                `<div class="brd-row${i < 3 ? ' top' : ''}${i === hl ? ' me' : ''}">
                     <span class="brd-rank">${medals[i] || (i + 1)}</span>
                     <span class="brd-name">${esc(r.n)}</span>
                     <span class="brd-gen">${r.g == null ? '' : (r.g === 0 ? '전체' : r.g + '세대')}</span>
@@ -1351,18 +1450,54 @@
                 </div>`).join('');
         }
 
+        function openBoard(hl = -1) {
+            renderBoard(hl);
+            $('boardOv').style.display = 'flex';
+        }
+
+        function closeBoard() {
+            $('boardOv').style.display = 'none';
+        }
+
+        $('boardX').addEventListener('click', closeBoard);
+        $('boardOv').addEventListener('click', e => {
+            if (e.target === $('boardOv')) closeBoard();
+        });
+
+        // 기록 초기화 (실수 방지: 3초 안에 한 번 더 눌러야 삭제)
+        let resetArm = null;
+        $('boardReset').addEventListener('click', () => {
+            const b = $('boardReset');
+            if (b.classList.contains('arm')) {
+                clearTimeout(resetArm);
+                lsSet('pkmq_board', '[]');
+                b.classList.remove('arm');
+                b.textContent = '🗑 기록 초기화';
+                renderBoard();
+            } else {
+                b.classList.add('arm');
+                b.textContent = '⚠️ 한 번 더 누르면 전체 기록이 삭제됩니다!';
+                resetArm = setTimeout(() => {
+                    b.classList.remove('arm');
+                    b.textContent = '🗑 기록 초기화';
+                }, 3000);
+            }
+        });
+
         $('saveBtn').addEventListener('click', () => {
             const name = $('nameInput').value.trim() || '트레이너';
             lsSet('pkmq_name', name);
             const board = loadBoard();
-            board.push({ n: name, s: correct, g: curGen, d: new Date().toISOString().slice(0, 10) });
+            const entry = { n: name, s: correct, g: curGen, d: new Date().toISOString().slice(0, 10) };
+            board.push(entry);
             board.sort((a, b) => b.s - a.s);
-            lsSet('pkmq_board', JSON.stringify(board.slice(0, 10)));
+            const top = board.slice(0, 10);
+            lsSet('pkmq_board', JSON.stringify(top));
             $('nameRow').style.display = 'none';
             $('taTitle').textContent = '✅ 기록 저장 완료!';
-            renderBoard();
             sfxCorrect();
             confetti(70, true);
+            openBoard(top.indexOf(entry)); // 내 기록 강조해서 모달로 표시
         });
 
         $('retryBtn').addEventListener('click', () => { sfxNext(); startTA(); });
@@ -1374,7 +1509,7 @@
             taMode = false; taOver = false;
             $('mNormal').classList.add('on'); $('mTa').classList.remove('on');
             $('taEnd').style.display = 'none';
-            $('board').style.display = 'none';
+            closeBoard();
             choicesEl.style.display = 'grid';
             $('hint').style.display = 'block';
             $('s4l').textContent = '🏆 최고연속';
@@ -1388,14 +1523,13 @@
         $('mTa').addEventListener('click', () => { sfxNext(); startTA(); });
 
         $('mBoard').addEventListener('click', () => {
-            const b = $('board');
-            if (b.style.display === 'block') { b.style.display = 'none'; return; }
-            renderBoard();
-            b.style.display = 'block';
+            if ($('boardOv').style.display === 'flex') { closeBoard(); return; }
+            openBoard();
         });
 
         // 키보드 단축키 (1~4로 선택, Enter/Space로 다음)
         document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { closeBoard(); return; }
             if (e.target.tagName === 'INPUT') return;
             if (!ans && e.key >= '1' && e.key <= '4') {
                 sfxClick();
@@ -1409,6 +1543,18 @@
 
         $('nxt').addEventListener('click', () => { sfxNext(); nextPoke(); });
         $('nxt2').addEventListener('click', () => { sfxNext(); nextPoke(); });
+
+        // 세대 필터 스크롤 화살표
+        const gensEl = $('gens'), gArrL = $('gArrL'), gArrR = $('gArrR');
+        function updateGArrows() {
+            gArrL.classList.toggle('hide', gensEl.scrollLeft <= 2);
+            gArrR.classList.toggle('hide', gensEl.scrollLeft >= gensEl.scrollWidth - gensEl.clientWidth - 2);
+        }
+        gensEl.addEventListener('scroll', updateGArrows, { passive: true });
+        window.addEventListener('resize', updateGArrows);
+        gArrL.addEventListener('click', () => gensEl.scrollBy({ left: -180, behavior: 'smooth' }));
+        gArrR.addEventListener('click', () => gensEl.scrollBy({ left: 180, behavior: 'smooth' }));
+        updateGArrows();
 
         // 시작
         $('s4').textContent = bestStreak;
