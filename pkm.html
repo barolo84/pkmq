@@ -137,6 +137,7 @@
         }
 
         .card {
+            position: relative;
             background: rgba(255, 255, 255, .07);
             border: 1px solid rgba(255, 255, 255, .12);
             border-radius: 22px;
@@ -419,11 +420,196 @@
             border-color: rgba(255, 215, 0, .2);
         }
 
+        /* 모드 선택 */
+        .modes {
+            display: flex;
+            gap: 6px;
+            justify-content: center
+        }
+
+        .mbtn {
+            padding: 6px 14px;
+            border: 2px solid rgba(78, 205, 196, .4);
+            background: transparent;
+            color: rgba(78, 205, 196, .7);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: .82em;
+            font-weight: 700;
+            transition: .2s;
+            font-family: inherit;
+        }
+
+        .mbtn:hover { border-color: #4ECDC4; color: #4ECDC4 }
+
+        .mbtn.on {
+            background: #4ECDC4;
+            border-color: #4ECDC4;
+            color: #1c2b4a
+        }
+
+        /* 타임어택 타이머 */
+        .sv.low {
+            color: #f87171;
+            animation: blink 1s steps(2) infinite
+        }
+
+        @keyframes blink { 50% { opacity: .4 } }
+
+        /* 타임어택 종료 패널 */
+        .ta-end { display: none; padding: 6px 0 2px }
+
+        .ta-title {
+            font-size: 1.25em;
+            font-weight: 900;
+            color: #FFD700;
+            margin-bottom: 6px
+        }
+
+        .ta-score {
+            font-size: 1.05em;
+            color: #fff;
+            font-weight: 700;
+            margin-bottom: 12px
+        }
+
+        .name-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 12px
+        }
+
+        .name-row input {
+            width: 150px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 215, 0, .5);
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            font-family: inherit;
+            font-weight: 700;
+            text-align: center;
+            font-size: .95em;
+        }
+
+        .name-row input:focus { outline: none; border-color: #FFD700 }
+
+        .abtn {
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #FFD700, #f0b400);
+            border: none;
+            border-radius: 10px;
+            color: #4a3800;
+            font-weight: 900;
+            font-size: .9em;
+            cursor: pointer;
+            font-family: inherit;
+            transition: .2s;
+        }
+
+        .abtn:hover { transform: scale(1.05) }
+
+        /* 리더보드 */
+        .board {
+            display: none;
+            background: rgba(255, 255, 255, .07);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 22px;
+            padding: 16px 18px;
+        }
+
+        .board-title {
+            font-weight: 900;
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 10px
+        }
+
+        .brd-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            font-size: .9em;
+            color: rgba(255, 255, 255, .85);
+        }
+
+        .brd-row:last-child { border-bottom: none }
+        .brd-row.top { font-weight: 700 }
+
+        .brd-rank { width: 30px; text-align: center; flex-shrink: 0 }
+
+        .brd-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .brd-score { color: #FFD700; font-weight: 900 }
+        .brd-date { color: rgba(255, 255, 255, .35); font-size: .85em }
+
+        .board-empty {
+            text-align: center;
+            color: rgba(255, 255, 255, .4);
+            padding: 10px 0;
+            font-size: .88em
+        }
+
+        /* 콤보 연출 */
+        .combo-float {
+            position: absolute;
+            left: 50%;
+            top: 34%;
+            transform: translate(-50%, -50%);
+            font-size: 1.7em;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 0 0 12px rgba(255, 215, 0, .8), 2px 2px 0 #7a5f00;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 5;
+            animation: comboUp 1.15s ease forwards;
+        }
+
+        .combo-float.mega {
+            font-size: 2.1em;
+            color: #ff6b35;
+            text-shadow: 0 0 16px rgba(255, 107, 53, .9), 2px 2px 0 #5c1f00
+        }
+
+        @keyframes comboUp {
+            0% { opacity: 0; transform: translate(-50%, -20%) scale(.4) }
+            25% { opacity: 1; transform: translate(-50%, -50%) scale(1.2) }
+            55% { opacity: 1; transform: translate(-50%, -58%) scale(1) }
+            100% { opacity: 0; transform: translate(-50%, -100%) scale(1.05) }
+        }
+
+        #flash {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0;
+            background: radial-gradient(circle, rgba(255, 215, 0, .3), transparent 70%);
+        }
+
+        #flash.go { animation: flashfade .55s ease }
+
+        @keyframes flashfade {
+            0% { opacity: 0 }
+            30% { opacity: 1 }
+            100% { opacity: 0 }
+        }
+
         @media(max-width:380px) {
             .hdr h1 { font-size: 1.5em }
             .imgbox { width: 180px; height: 180px }
             .pimg { width: 155px; height: 155px }
             .cbtn { font-size: .85em; padding: 10px 8px }
+            .sv { font-size: 1.25em }
         }
     </style>
 </head>
@@ -450,6 +636,12 @@
             <button class="gbtn" data-g="8">8세대</button>
         </div>
 
+        <div class="modes">
+            <button class="mbtn on" id="mNormal">🎮 일반</button>
+            <button class="mbtn" id="mTa">⏱️ 타임어택</button>
+            <button class="mbtn" id="mBoard">🏆 랭킹</button>
+        </div>
+
         <div class="scores">
             <div class="sc">
                 <div class="sv" id="sc">0</div>
@@ -462,6 +654,10 @@
             <div class="sc">
                 <div class="sv fire" id="ss">0</div>
                 <div class="sl">🔥 연속</div>
+            </div>
+            <div class="sc">
+                <div class="sv" id="s4">0</div>
+                <div class="sl" id="s4l">🏆 최고연속</div>
             </div>
         </div>
 
@@ -496,9 +692,28 @@
             <div class="brow">
                 <button class="nxt" id="nxt">다음 ▶</button>
             </div>
+
+            <div class="ta-end" id="taEnd">
+                <div class="ta-title" id="taTitle">⏱️ 타임어택 종료!</div>
+                <div class="ta-score" id="taScore"></div>
+                <div class="name-row" id="nameRow" style="display:none">
+                    <input id="nameInput" maxlength="8" placeholder="이름 입력" />
+                    <button class="abtn" id="saveBtn">기록 저장</button>
+                </div>
+                <div class="brow">
+                    <button class="abtn" id="retryBtn">🔄 다시 도전</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="board" id="board">
+            <div class="board-title">🏆 타임어택 TOP 10</div>
+            <div id="boardList"></div>
         </div>
 
     </div>
+
+    <div id="flash"></div>
 
     <script src="pkm_data.js"></script>
     <script src="pkm_hints.js"></script>
@@ -518,6 +733,16 @@
 
         let pool = [...PD], cur = null, ans = false;
         let correct = 0, total = 0, streak = 0;
+
+        // ===== 기록 저장 (이 브라우저의 localStorage — 기기별 저장) =====
+        function lsGet(k, d) { try { return localStorage.getItem(k) ?? d } catch (e) { return d } }
+        function lsSet(k, v) { try { localStorage.setItem(k, v) } catch (e) { } }
+        let bestStreak = +lsGet('pkmq_best_streak', 0) || 0;
+        function loadBoard() { try { return JSON.parse(lsGet('pkmq_board', '[]')) || [] } catch (e) { return [] } }
+
+        // ===== 타임어택 상태 =====
+        const TA_SECONDS = 180;
+        let taMode = false, taOver = false, taTime = 0, taTimer = null, taAdvance = null;
 
         // 레트로 사운드 (Web Audio API) - 크로스 브라우저 + iOS
         var actx = null;
@@ -706,12 +931,17 @@
             btn.classList.add('on');
             const g = +btn.dataset.g;
             pool = g === 0 ? [...PD] : PD.filter(p => p.g === g);
+            if (taMode) { startTA(); return; }
+            resetStats();
+            nextPoke();
+        });
+
+        function resetStats() {
             correct = 0; total = 0; streak = 0;
             $('sc').textContent = 0;
             $('st').textContent = 0;
             $('ss').textContent = 0;
-            nextPoke();
-        });
+        }
 
         // 이미지 로드
         function loadImg(filepath) {
@@ -781,12 +1011,17 @@
                 correct++; streak++;
                 $('sc').textContent = correct;
                 $('ss').textContent = streak;
+                if (streak > bestStreak) {
+                    bestStreak = streak;
+                    lsSet('pkmq_best_streak', bestStreak);
+                    if (!taMode) $('s4').textContent = bestStreak;
+                }
                 reveal();
                 fbEl.textContent = streak >= 3 ? `🎉 정답! ${streak}연속 완벽해요! 🔥` : '🎉 정답! 맞췄어요!';
                 fbEl.className = 'fb ok fadeup';
                 pimgEl.classList.add('pop');
                 setTimeout(() => pimgEl.classList.remove('pop'), 450);
-                confetti();
+                comboFx();
                 sfxCorrect();
             } else {
                 streak = 0;
@@ -799,7 +1034,14 @@
                 sfxWrong();
             }
 
-            nxtEl.style.display = 'inline-block';
+            if (taMode) {
+                // 타임어택: 자동으로 다음 문제 진행
+                if (!taOver) taAdvance = setTimeout(() => {
+                    if (taMode && !taOver) nextPoke();
+                }, isCorrect ? 900 : 1500);
+            } else {
+                nxtEl.style.display = 'inline-block';
+            }
         }
 
         function reveal() {
@@ -810,6 +1052,7 @@
         }
 
         function nextPoke() {
+            if (taOver) return;
             ans = false;
             // 직전 문제와 같은 포켓몬 연속 출제 방지
             let pick;
@@ -842,9 +1085,11 @@
             loadImg(cur.f);
         }
 
-        function confetti() {
-            const cls = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFC0CB', '#DDA0DD'];
-            for (let i = 0; i < 45; i++) {
+        function confetti(count = 45, golden = false) {
+            const cls = golden
+                ? ['#FFD700', '#FFC300', '#FFE066', '#FF6B35', '#FFF8DC']
+                : ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFC0CB', '#DDA0DD'];
+            for (let i = 0; i < count; i++) {
                 const el = document.createElement('div');
                 el.className = 'cf';
                 const sz = 6 + Math.random() * 6;
@@ -857,12 +1102,148 @@
             }
         }
 
+        // ===== 콤보 연출 =====
+        const cardEl = document.querySelector('.card'), flashEl = $('flash');
+
+        function comboFx() {
+            confetti(45 + Math.min(streak, 15) * 8, streak >= 5);
+            if (streak >= 3) {
+                const c = document.createElement('div');
+                c.className = 'combo-float' + (streak >= 10 ? ' mega' : '');
+                c.textContent = streak >= 10 ? `⚡ ${streak} COMBO!! ⚡` : `🔥 ${streak} COMBO!`;
+                cardEl.appendChild(c);
+                setTimeout(() => c.remove(), 1200);
+            }
+            if (streak >= 5 && streak % 5 === 0) { screenFlash(); sfxCombo(); }
+        }
+
+        function screenFlash() {
+            flashEl.classList.remove('go');
+            void flashEl.offsetWidth;
+            flashEl.classList.add('go');
+        }
+
+        function sfxCombo() {
+            [523, 659, 784, 1047, 1319].forEach((f, i) =>
+                setTimeout(() => playTone(f, 0.09, 'square', 0.1), i * 55));
+        }
+
+        // ===== 타임어택 =====
+        function startTA() {
+            clearInterval(taTimer); clearTimeout(taAdvance);
+            taMode = true; taOver = false;
+            $('mTa').classList.add('on'); $('mNormal').classList.remove('on');
+            $('taEnd').style.display = 'none';
+            $('board').style.display = 'none';
+            choicesEl.style.display = 'grid';
+            $('hint').style.display = 'block';
+            resetStats();
+            taTime = TA_SECONDS;
+            $('s4l').textContent = '⏱️ 남은시간';
+            const s4 = $('s4');
+            s4.textContent = taTime;
+            s4.classList.remove('low');
+            taTimer = setInterval(() => {
+                taTime--;
+                s4.textContent = Math.max(taTime, 0);
+                if (taTime <= 10) s4.classList.add('low');
+                if (taTime <= 0) endTA();
+            }, 1000);
+            nextPoke();
+        }
+
+        function endTA() {
+            clearInterval(taTimer); clearTimeout(taAdvance);
+            taOver = true; ans = true;
+            reveal();
+            choicesEl.style.display = 'none';
+            $('hint').style.display = 'none';
+            fbEl.textContent = ''; fbEl.className = 'fb';
+            nxtEl.style.display = 'none';
+            $('taScore').textContent = `${correct}마리 맞췄어요!`;
+            const board = loadBoard();
+            const qualifies = correct > 0 && (board.length < 10 || correct > board[board.length - 1].s);
+            $('nameRow').style.display = qualifies ? 'flex' : 'none';
+            $('taTitle').textContent = qualifies ? '🎉 TOP 10 진입!' : '⏱️ 타임어택 종료!';
+            if (qualifies) $('nameInput').value = lsGet('pkmq_name', '');
+            $('taEnd').style.display = 'block';
+            renderBoard();
+            $('board').style.display = 'block';
+            sfxNext();
+        }
+
+        // ===== 리더보드 =====
+        function esc(s) {
+            return String(s).replace(/[&<>"']/g, c =>
+                ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function renderBoard() {
+            const board = loadBoard();
+            if (!board.length) {
+                $('boardList').innerHTML = '<div class="board-empty">아직 기록이 없어요. 타임어택에 도전해보세요!</div>';
+                return;
+            }
+            const medals = ['🥇', '🥈', '🥉'];
+            $('boardList').innerHTML = board.map((r, i) =>
+                `<div class="brd-row${i < 3 ? ' top' : ''}">
+                    <span class="brd-rank">${medals[i] || (i + 1)}</span>
+                    <span class="brd-name">${esc(r.n)}</span>
+                    <span class="brd-score">${r.s}마리</span>
+                    <span class="brd-date">${r.d}</span>
+                </div>`).join('');
+        }
+
+        $('saveBtn').addEventListener('click', () => {
+            const name = $('nameInput').value.trim() || '트레이너';
+            lsSet('pkmq_name', name);
+            const board = loadBoard();
+            board.push({ n: name, s: correct, d: new Date().toISOString().slice(0, 10) });
+            board.sort((a, b) => b.s - a.s);
+            lsSet('pkmq_board', JSON.stringify(board.slice(0, 10)));
+            $('nameRow').style.display = 'none';
+            $('taTitle').textContent = '✅ 기록 저장 완료!';
+            renderBoard();
+            sfxCorrect();
+            confetti(70, true);
+        });
+
+        $('retryBtn').addEventListener('click', () => { sfxNext(); startTA(); });
+
+        // ===== 모드 전환 =====
+        $('mNormal').addEventListener('click', () => {
+            if (!taMode) return;
+            clearInterval(taTimer); clearTimeout(taAdvance);
+            taMode = false; taOver = false;
+            $('mNormal').classList.add('on'); $('mTa').classList.remove('on');
+            $('taEnd').style.display = 'none';
+            $('board').style.display = 'none';
+            choicesEl.style.display = 'grid';
+            $('hint').style.display = 'block';
+            $('s4l').textContent = '🏆 최고연속';
+            const s4 = $('s4');
+            s4.textContent = bestStreak;
+            s4.classList.remove('low');
+            resetStats();
+            nextPoke();
+        });
+
+        $('mTa').addEventListener('click', () => { sfxNext(); startTA(); });
+
+        $('mBoard').addEventListener('click', () => {
+            const b = $('board');
+            if (b.style.display === 'block') { b.style.display = 'none'; return; }
+            renderBoard();
+            b.style.display = 'block';
+        });
+
         // 키보드 단축키 (1~4로 선택, Enter/Space로 다음)
         document.addEventListener('keydown', e => {
+            if (e.target.tagName === 'INPUT') return;
             if (!ans && e.key >= '1' && e.key <= '4') {
                 sfxClick();
                 onChoice(+e.key - 1);
-            } else if (ans && (e.key === 'Enter' || e.key === ' ')) {
+            } else if (ans && !taMode && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault();
                 sfxNext();
                 nextPoke();
@@ -872,6 +1253,7 @@
         $('nxt').addEventListener('click', () => { sfxNext(); nextPoke(); });
 
         // 시작
+        $('s4').textContent = bestStreak;
         nextPoke();
     </script>
 </body>
