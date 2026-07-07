@@ -71,21 +71,32 @@
         .gens {
             display: flex;
             gap: 6px;
-            flex-wrap: wrap;
-            justify-content: center
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding: 2px;
         }
 
+        .gens::-webkit-scrollbar { display: none }
+
+        /* 공간이 남으면 가운데 정렬, 넘치면 자연스럽게 스크롤 */
+        .gbtn:first-child { margin-left: auto }
+        .gbtn:last-child { margin-right: auto }
+
         .gbtn {
-            padding: 5px 13px;
+            padding: 8px 15px;
             border: 2px solid rgba(255, 215, 0, .4);
             background: transparent;
             color: rgba(255, 215, 0, .6);
             border-radius: 20px;
             cursor: pointer;
-            font-size: .78em;
+            font-size: .8em;
             font-weight: 700;
             transition: .2s;
             font-family: inherit;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .gbtn:hover {
@@ -1027,6 +1038,7 @@
             if (!btn) return;
             document.querySelectorAll('.gbtn').forEach(b => b.classList.remove('on'));
             btn.classList.add('on');
+            btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             const g = +btn.dataset.g;
             curGen = g;
             pool = g === 0 ? [...PD] : PD.filter(p => p.g === g);
