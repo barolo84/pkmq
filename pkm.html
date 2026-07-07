@@ -548,6 +548,17 @@
             white-space: nowrap
         }
 
+        .brd-gen {
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(78, 205, 196, .15);
+            border: 1px solid rgba(78, 205, 196, .35);
+            color: #4ECDC4;
+            font-size: .78em;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
         .brd-score { color: #FFD700; font-weight: 900 }
         .brd-date { color: rgba(255, 255, 255, .35); font-size: .85em }
 
@@ -556,6 +567,55 @@
             color: rgba(255, 255, 255, .4);
             padding: 10px 0;
             font-size: .88em
+        }
+
+        /* 연습 모드 결과 팝업 (화면 하단 고정 — 스크롤 위치와 무관하게 항상 보임) */
+        .fb-pop {
+            display: none;
+            position: fixed;
+            left: 12px;
+            right: 12px;
+            bottom: 14px;
+            margin: 0 auto;
+            max-width: 456px;
+            z-index: 9000;
+            text-align: center;
+            background: rgba(16, 26, 52, .97);
+            border: 2px solid rgba(255, 255, 255, .15);
+            border-radius: 16px;
+            padding: 16px 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, .6);
+            animation: fadeup .3s ease;
+        }
+
+        .fb-pop.ok { border-color: rgba(74, 222, 128, .6) }
+        .fb-pop.no { border-color: rgba(248, 113, 113, .6) }
+
+        .fb-msg {
+            font-weight: 700;
+            font-size: .95em;
+            margin-bottom: 12px;
+        }
+
+        .fb-pop.ok .fb-msg { color: #4ade80 }
+        .fb-pop.no .fb-msg { color: #f87171 }
+
+        .nxt2 {
+            padding: 10px 28px;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            border: none;
+            border-radius: 10px;
+            color: #0f2e0f;
+            font-weight: 900;
+            font-size: .95em;
+            cursor: pointer;
+            font-family: inherit;
+            transition: .2s;
+        }
+
+        .nxt2:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 12px rgba(74, 222, 128, .35)
         }
 
         /* 타임어택 카운트다운 */
@@ -737,6 +797,11 @@
             <div class="cdown" id="cdown">
                 <div class="cd-num" id="cdNum">3</div>
             </div>
+
+            <div class="fb-pop" id="fbPop">
+                <div class="fb-msg" id="fbMsg"></div>
+                <button class="nxt2" id="nxt2">다음 ▶</button>
+            </div>
         </div>
 
         <div class="board" id="board">
@@ -764,7 +829,7 @@
         });
         for (const g in namesByGen) namesByGen[g] = [...namesByGen[g]];
 
-        let pool = [...PD], cur = null, ans = false;
+        let pool = [...PD], cur = null, ans = false, curGen = 0;
         let correct = 0, total = 0, streak = 0;
 
         // ===== 기록 저장 (이 브라우저의 localStorage — 기기별 저장) =====
@@ -963,6 +1028,7 @@
             document.querySelectorAll('.gbtn').forEach(b => b.classList.remove('on'));
             btn.classList.add('on');
             const g = +btn.dataset.g;
+            curGen = g;
             pool = g === 0 ? [...PD] : PD.filter(p => p.g === g);
             if (taMode) { startTA(); return; }
             resetStats();
@@ -1040,6 +1106,7 @@
                 }
             });
 
+            let msg;
             if (isCorrect) {
                 correct++; streak++;
                 $('sc').textContent = correct;
@@ -1050,8 +1117,7 @@
                     if (!taMode) $('s4').textContent = bestStreak;
                 }
                 reveal();
-                fbEl.textContent = streak >= 3 ? `🎉 정답! ${streak}연속 완벽해요! 🔥` : '🎉 정답! 맞췄어요!';
-                fbEl.className = 'fb ok fadeup';
+                msg = streak >= 3 ? `🎉 정답! ${streak}연속 완벽해요! 🔥` : '🎉 정답! 맞췄어요!';
                 pimgEl.classList.add('pop');
                 setTimeout(() => pimgEl.classList.remove('pop'), 450);
                 comboFx();
@@ -1060,20 +1126,25 @@
                 streak = 0;
                 $('ss').textContent = 0;
                 reveal();
-                fbEl.textContent = `❌ 아쉬워요! 정답은 "${correctName}"`;
-                fbEl.className = 'fb no fadeup';
+                msg = `❌ 아쉬워요! 정답은 "${correctName}"`;
                 picked.classList.add('shake');
                 setTimeout(() => picked.classList.remove('shake'), 350);
                 sfxWrong();
             }
 
             if (taMode) {
-                // 타임어택: 자동으로 다음 문제 진행
+                // 타임어택: 인라인 피드백 + 자동으로 다음 문제 진행
+                fbEl.textContent = msg;
+                fbEl.className = isCorrect ? 'fb ok fadeup' : 'fb no fadeup';
                 if (!taOver) taAdvance = setTimeout(() => {
                     if (taMode && !taOver) nextPoke();
                 }, isCorrect ? 900 : 1500);
             } else {
-                nxtEl.style.display = 'inline-block';
+                // 연습 모드: 화면 하단 고정 팝업
+                $('fbMsg').textContent = msg;
+                const pop = $('fbPop');
+                pop.className = 'fb-pop ' + (isCorrect ? 'ok' : 'no');
+                pop.style.display = 'block';
             }
         }
 
@@ -1098,6 +1169,7 @@
             pnameEl.className = 'pname';
             fbEl.textContent = ''; fbEl.className = 'fb';
             nxtEl.style.display = 'none';
+            $('fbPop').style.display = 'none';
 
             // 보기 세팅
             const options = makeChoices(cur.n, cur.g);
@@ -1261,6 +1333,7 @@
                 `<div class="brd-row${i < 3 ? ' top' : ''}">
                     <span class="brd-rank">${medals[i] || (i + 1)}</span>
                     <span class="brd-name">${esc(r.n)}</span>
+                    <span class="brd-gen">${r.g == null ? '' : (r.g === 0 ? '전체' : r.g + '세대')}</span>
                     <span class="brd-score">${r.s}마리</span>
                     <span class="brd-date">${r.d}</span>
                 </div>`).join('');
@@ -1270,7 +1343,7 @@
             const name = $('nameInput').value.trim() || '트레이너';
             lsSet('pkmq_name', name);
             const board = loadBoard();
-            board.push({ n: name, s: correct, d: new Date().toISOString().slice(0, 10) });
+            board.push({ n: name, s: correct, g: curGen, d: new Date().toISOString().slice(0, 10) });
             board.sort((a, b) => b.s - a.s);
             lsSet('pkmq_board', JSON.stringify(board.slice(0, 10)));
             $('nameRow').style.display = 'none';
@@ -1323,6 +1396,7 @@
         });
 
         $('nxt').addEventListener('click', () => { sfxNext(); nextPoke(); });
+        $('nxt2').addEventListener('click', () => { sfxNext(); nextPoke(); });
 
         // 시작
         $('s4').textContent = bestStreak;
