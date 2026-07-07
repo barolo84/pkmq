@@ -839,7 +839,7 @@
         function loadBoard() { try { return JSON.parse(lsGet('pkmq_board', '[]')) || [] } catch (e) { return [] } }
 
         // ===== 타임어택 상태 =====
-        const TA_SECONDS = 180;
+        const TA_SECONDS = 100;
         let taMode = false, taOver = false, taTime = 0, taTimer = null, taAdvance = null;
 
         // 레트로 사운드 (Web Audio API) - 크로스 브라우저 + iOS
