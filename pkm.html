@@ -558,6 +558,35 @@
             font-size: .88em
         }
 
+        /* 타임어택 카운트다운 */
+        .cdown {
+            display: none;
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            border-radius: 22px;
+            background: rgba(20, 32, 64, .85);
+            backdrop-filter: blur(3px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cd-num {
+            font-size: 5em;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 0 0 30px rgba(255, 215, 0, .6), 3px 3px 0 #7a5f00;
+        }
+
+        .cd-num.pop2 { animation: cdpop .8s ease }
+
+        @keyframes cdpop {
+            0% { transform: scale(2.2); opacity: 0 }
+            30% { transform: scale(1); opacity: 1 }
+            80% { opacity: 1 }
+            100% { opacity: .6; transform: scale(.92) }
+        }
+
         /* 콤보 연출 */
         .combo-float {
             position: absolute;
@@ -703,6 +732,10 @@
                 <div class="brow">
                     <button class="abtn" id="retryBtn">🔄 다시 도전</button>
                 </div>
+            </div>
+
+            <div class="cdown" id="cdown">
+                <div class="cd-num" id="cdNum">3</div>
             </div>
         </div>
 
@@ -1129,20 +1162,59 @@
         }
 
         // ===== 타임어택 =====
+        let cdTimer = null;
+
+        function cancelTATimers() {
+            clearInterval(taTimer); clearTimeout(taAdvance); clearTimeout(cdTimer);
+            $('cdown').style.display = 'none';
+        }
+
         function startTA() {
-            clearInterval(taTimer); clearTimeout(taAdvance);
+            cancelTATimers();
             taMode = true; taOver = false;
+            ans = true; // 카운트다운 중 입력 차단
             $('mTa').classList.add('on'); $('mNormal').classList.remove('on');
             $('taEnd').style.display = 'none';
             $('board').style.display = 'none';
             choicesEl.style.display = 'grid';
             $('hint').style.display = 'block';
             resetStats();
-            taTime = TA_SECONDS;
             $('s4l').textContent = '⏱️ 남은시간';
             const s4 = $('s4');
-            s4.textContent = taTime;
+            s4.textContent = TA_SECONDS;
             s4.classList.remove('low');
+            // 3-2-1 카운트다운
+            const cd = $('cdown'), num = $('cdNum');
+            cd.style.display = 'flex';
+            let n = 3;
+            const tick = () => {
+                if (n > 0) {
+                    num.textContent = n;
+                    num.className = 'cd-num';
+                    void num.offsetWidth;
+                    num.className = 'cd-num pop2';
+                    playTone(660, 0.12, 'square', 0.12);
+                    n--;
+                    cdTimer = setTimeout(tick, 800);
+                } else {
+                    num.textContent = 'GO!';
+                    num.className = 'cd-num';
+                    void num.offsetWidth;
+                    num.className = 'cd-num pop2';
+                    playTone(1047, 0.3, 'square', 0.14);
+                    cdTimer = setTimeout(() => {
+                        cd.style.display = 'none';
+                        beginTA();
+                    }, 550);
+                }
+            };
+            tick();
+        }
+
+        function beginTA() {
+            taTime = TA_SECONDS;
+            const s4 = $('s4');
+            s4.textContent = taTime;
             taTimer = setInterval(() => {
                 taTime--;
                 s4.textContent = Math.max(taTime, 0);
@@ -1213,7 +1285,7 @@
         // ===== 모드 전환 =====
         $('mNormal').addEventListener('click', () => {
             if (!taMode) return;
-            clearInterval(taTimer); clearTimeout(taAdvance);
+            cancelTATimers();
             taMode = false; taOver = false;
             $('mNormal').classList.add('on'); $('mTa').classList.remove('on');
             $('taEnd').style.display = 'none';
