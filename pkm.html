@@ -169,6 +169,12 @@
             line-height: 1
         }
 
+        /* 진행률(12/78) 표시용 축소 폰트 — 칸 높이는 유지 */
+        .sv.frac {
+            font-size: 1.05em;
+            line-height: 1.43;
+        }
+
         .sl {
             font-size: .68em;
             color: rgba(255, 255, 255, .45);
@@ -1223,9 +1229,65 @@
 
         function resetStats() {
             correct = 0; total = 0; streak = 0;
+            completed = false;
+            $('nxt2').textContent = '다음 ▶';
+            shuffleDeck();
             $('sc').textContent = 0;
-            $('st').textContent = 0;
             $('ss').textContent = 0;
+            updateTriesDisplay();
+        }
+
+        // 시도 칸: 연습 모드에서는 진행률(답한 수/전체)로 표시
+        function updateTriesDisplay() {
+            const st = $('st');
+            if (taMode) {
+                st.textContent = total;
+                st.classList.remove('frac');
+            } else {
+                st.textContent = `${total}/${deck.length}`;
+                st.classList.add('frac');
+            }
+        }
+
+        // ===== 출제 덱 (셔플 후 중복 없이 순서대로) =====
+        let deck = [], deckIdx = 0, completed = false;
+
+        function shuffleDeck() {
+            deck = [...pool];
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            // 새 덱의 첫 장이 직전 문제와 같으면 교체
+            if (deck.length > 1 && cur && deck[0] === cur) {
+                [deck[0], deck[1]] = [deck[1], deck[0]];
+            }
+            deckIdx = 0;
+        }
+
+        // 연습 모드 완주 화면
+        function showComplete() {
+            ans = true;
+            completed = true;
+            pnum.textContent = '🏁';
+            pnameEl.textContent = '완주!';
+            pnameEl.className = 'pname ans';
+            const pct = total ? Math.round(correct / total * 100) : 0;
+            $('fbMsg').textContent = `🎉 ${deck.length}마리 완주! 정답 ${correct}/${total} (정답률 ${pct}%)`;
+            const pop = $('fbPop');
+            pop.className = 'fb-pop ok';
+            pop.style.display = 'block';
+            $('nxt2').textContent = '🔄 다시 시작';
+            confetti(120, true);
+            sfxCombo();
+        }
+
+        // 다음 문제로 진행 (완주 상태면 새 라운드 시작)
+        function advance() {
+            if (completed) {
+                resetStats();
+            }
+            nextPoke();
         }
 
         // 이미지 로드
@@ -1274,7 +1336,7 @@
             if (ans) return;
             ans = true;
             total++;
-            $('st').textContent = total;
+            updateTriesDisplay();
 
             const picked = cbtns[idx];
             const correctName = displayName(cur.n);
@@ -1344,13 +1406,18 @@
         function nextPoke() {
             if (taOver) return;
             if (!pool.length) pool = [...PD]; // 캐시 불일치 등으로 풀이 비면 전체로 폴백
+            if (!deck.length) shuffleDeck();
+            // 덱에서 순서대로 뽑기 (중복 없음)
+            if (deckIdx >= deck.length) {
+                if (taMode) {
+                    shuffleDeck(); // 타임어택: 덱을 다 돌면 다시 섞어서 계속
+                } else {
+                    showComplete(); // 연습: 완주!
+                    return;
+                }
+            }
             ans = false;
-            // 직전 문제와 같은 포켓몬 연속 출제 방지
-            let pick;
-            do {
-                pick = pool[Math.floor(Math.random() * pool.length)];
-            } while (pool.length > 1 && cur && pick.id === cur.id && pick.n === cur.n);
-            cur = pick;
+            cur = deck[deckIdx++];
             pnum.textContent = 'No.???';
             pnameEl.textContent = '？ ？ ？ ？';
             pnameEl.className = 'pname';
@@ -1636,12 +1703,12 @@
             } else if (ans && !taMode && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault();
                 sfxNext();
-                nextPoke();
+                advance();
             }
         });
 
-        $('nxt').addEventListener('click', () => { sfxNext(); nextPoke(); });
-        $('nxt2').addEventListener('click', () => { sfxNext(); nextPoke(); });
+        $('nxt').addEventListener('click', () => { sfxNext(); advance(); });
+        $('nxt2').addEventListener('click', () => { sfxNext(); advance(); });
 
         // 세대 필터 스크롤 화살표
         const gensEl = $('gens'), gArrL = $('gArrL'), gArrR = $('gArrR');
@@ -1657,6 +1724,7 @@
 
         // 시작
         $('s4').textContent = bestStreak;
+        shuffleDeck();
         nextPoke();
     </script>
 </body>
