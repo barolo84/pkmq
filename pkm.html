@@ -795,6 +795,56 @@
             100% { opacity: .6; transform: scale(.92) }
         }
 
+        /* 완주 모달 */
+        .done-ov {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9600;
+            background: rgba(10, 16, 35, .75);
+            backdrop-filter: blur(3px);
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+
+        .done-box {
+            width: 100%;
+            max-width: 340px;
+            background: #1e2f55;
+            border: 2px solid rgba(255, 215, 0, .55);
+            border-radius: 24px;
+            padding: 28px 22px 24px;
+            text-align: center;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, .6), 0 0 40px rgba(255, 215, 0, .15);
+            animation: donePop .45s ease;
+        }
+
+        @keyframes donePop {
+            0% { transform: scale(.6); opacity: 0 }
+            60% { transform: scale(1.06); opacity: 1 }
+            100% { transform: scale(1) }
+        }
+
+        .done-emoji { font-size: 3em; margin-bottom: 6px }
+
+        .done-title {
+            font-size: 1.6em;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 0 0 16px rgba(255, 215, 0, .4);
+            margin-bottom: 12px;
+        }
+
+        .done-stats {
+            color: rgba(255, 255, 255, .85);
+            font-size: .95em;
+            line-height: 1.7;
+            margin-bottom: 18px;
+        }
+
+        .done-stats b { color: #FFD700; font-size: 1.15em }
+
         /* 콤보 연출 */
         .combo-float {
             position: absolute;
@@ -957,6 +1007,15 @@
             </div>
         </div>
 
+    </div>
+
+    <div class="done-ov" id="doneOv">
+        <div class="done-box">
+            <div class="done-emoji">🏁</div>
+            <div class="done-title">완주!</div>
+            <div class="done-stats" id="doneStats"></div>
+            <button class="abtn" id="doneRetry">🔄 다시 시작</button>
+        </div>
     </div>
 
     <div class="board-ov" id="boardOv">
@@ -1230,7 +1289,7 @@
         function resetStats() {
             correct = 0; total = 0; streak = 0;
             completed = false;
-            $('nxt2').textContent = '다음 ▶';
+            $('doneOv').style.display = 'none';
             shuffleDeck();
             $('sc').textContent = 0;
             $('ss').textContent = 0;
@@ -1265,19 +1324,17 @@
             deckIdx = 0;
         }
 
-        // 연습 모드 완주 화면
+        // 연습 모드 완주 모달
         function showComplete() {
             ans = true;
             completed = true;
-            pnum.textContent = '🏁';
-            pnameEl.textContent = '완주!';
-            pnameEl.className = 'pname ans';
+            $('fbPop').style.display = 'none';
             const pct = total ? Math.round(correct / total * 100) : 0;
-            $('fbMsg').textContent = `🎉 ${deck.length}마리 완주! 정답 ${correct}/${total} (정답률 ${pct}%)`;
-            const pop = $('fbPop');
-            pop.className = 'fb-pop ok';
-            pop.style.display = 'block';
-            $('nxt2').textContent = '🔄 다시 시작';
+            const genLabel = curGen === 0 ? '전체' : curGen + '세대';
+            $('doneStats').innerHTML =
+                `${genLabel} <b>${deck.length}</b>마리 완주!<br>` +
+                `정답 <b>${correct} / ${total}</b> · 정답률 <b>${pct}%</b>`;
+            $('doneOv').style.display = 'flex';
             confetti(120, true);
             sfxCombo();
         }
@@ -1285,10 +1342,12 @@
         // 다음 문제로 진행 (완주 상태면 새 라운드 시작)
         function advance() {
             if (completed) {
-                resetStats();
+                resetStats(); // doneOv 숨김 포함
             }
             nextPoke();
         }
+
+        $('doneRetry').addEventListener('click', () => { sfxNext(); advance(); });
 
         // 이미지 로드
         function loadImg(filepath) {
