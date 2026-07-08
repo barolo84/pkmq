@@ -867,6 +867,7 @@
                 <button class="gbtn" data-g="6">6세대</button>
                 <button class="gbtn" data-g="7">7세대</button>
                 <button class="gbtn" data-g="8">8세대</button>
+                <button class="gbtn" data-g="9">9세대</button>
             </div>
             <button class="garr right hide" id="gArrR">›</button>
         </div>
@@ -973,8 +974,8 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-    <script src="pkm_data.js"></script>
-    <script src="pkm_hints.js"></script>
+    <script src="pkm_data.js?v=9"></script>
+    <script src="pkm_hints.js?v=9"></script>
     <script>
         // 이름에서 폼 접미사 제거 (보기 표시용)
         function displayName(n) {
@@ -1342,6 +1343,7 @@
 
         function nextPoke() {
             if (taOver) return;
+            if (!pool.length) pool = [...PD]; // 캐시 불일치 등으로 풀이 비면 전체로 폴백
             ans = false;
             // 직전 문제와 같은 포켓몬 연속 출제 방지
             let pick;
