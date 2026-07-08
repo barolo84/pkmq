@@ -128,9 +128,12 @@
             flex-shrink: 0;
         }
 
-        .gbtn:hover {
-            border-color: #FFD700;
-            color: #FFD700
+        /* hover는 마우스 있는 기기에서만 (모바일 터치 후 하이라이트 잔상 방지) */
+        @media (hover: hover) {
+            .gbtn:hover {
+                border-color: #FFD700;
+                color: #FFD700
+            }
         }
 
         .gbtn.on {
@@ -322,11 +325,13 @@
             word-break: keep-all;
         }
 
-        .cbtn:hover:not(.picked) {
-            border-color: #FFD700;
-            background: rgba(255, 215, 0, .1);
-            color: #FFD700;
-            transform: scale(1.02);
+        @media (hover: hover) {
+            .cbtn:hover:not(.picked) {
+                border-color: #FFD700;
+                background: rgba(255, 215, 0, .1);
+                color: #FFD700;
+                transform: scale(1.02);
+            }
         }
 
         .cbtn:active:not(.picked) {
@@ -389,9 +394,11 @@
             transition: .2s;
         }
 
-        .nxt:hover {
-            transform: scale(1.04);
-            box-shadow: 0 4px 12px rgba(74, 222, 128, .35)
+        @media (hover: hover) {
+            .nxt:hover {
+                transform: scale(1.04);
+                box-shadow: 0 4px 12px rgba(74, 222, 128, .35)
+            }
         }
 
         @keyframes shake {
@@ -450,9 +457,11 @@
             backdrop-filter: blur(4px);
         }
 
-        .bgm-toggle:hover {
-            border-color: #FFD700;
-            transform: scale(1.1);
+        @media (hover: hover) {
+            .bgm-toggle:hover {
+                border-color: #FFD700;
+                transform: scale(1.1);
+            }
         }
 
         .bgm-toggle.off {
@@ -480,7 +489,9 @@
             font-family: inherit;
         }
 
-        .mbtn:hover { border-color: #4ECDC4; color: #4ECDC4 }
+        @media (hover: hover) {
+            .mbtn:hover { border-color: #4ECDC4; color: #4ECDC4 }
+        }
 
         .mbtn.on {
             background: #4ECDC4;
@@ -548,7 +559,9 @@
             transition: .2s;
         }
 
-        .abtn:hover { transform: scale(1.05) }
+        @media (hover: hover) {
+            .abtn:hover { transform: scale(1.05) }
+        }
 
         /* 리더보드 모달 */
         .board-ov {
@@ -599,7 +612,9 @@
             font-family: inherit;
         }
 
-        .board-x:hover { color: #fff }
+        @media (hover: hover) {
+            .board-x:hover { color: #fff }
+        }
 
         .brd-row.me {
             background: rgba(255, 215, 0, .1);
@@ -738,9 +753,11 @@
             transition: .2s;
         }
 
-        .nxt2:hover {
-            transform: scale(1.04);
-            box-shadow: 0 4px 12px rgba(74, 222, 128, .35)
+        @media (hover: hover) {
+            .nxt2:hover {
+                transform: scale(1.04);
+                box-shadow: 0 4px 12px rgba(74, 222, 128, .35)
+            }
         }
 
         /* 타임어택 카운트다운 */
