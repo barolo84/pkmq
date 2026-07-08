@@ -607,25 +607,48 @@
             border-radius: 10px;
         }
 
-        .board-reset {
+        #trophy { cursor: default; user-select: none }
+
+        .reset-row {
+            display: none;
             margin-top: 12px;
-            width: 100%;
-            padding: 8px;
-            background: none;
-            border: 1px dashed rgba(248, 113, 113, .4);
-            color: rgba(248, 113, 113, .75);
+            padding: 12px;
+            border: 1px solid rgba(248, 113, 113, .45);
+            background: rgba(248, 113, 113, .1);
+            border-radius: 12px;
+            text-align: center;
+            animation: fadeup .25s ease;
+        }
+
+        .reset-msg {
+            color: #f87171;
+            font-weight: 700;
+            font-size: .88em;
+            margin-bottom: 10px;
+        }
+
+        .reset-btns { display: flex; gap: 8px; justify-content: center }
+
+        .reset-btns button {
+            padding: 8px 22px;
             border-radius: 10px;
             cursor: pointer;
             font-family: inherit;
-            font-size: .82em;
             font-weight: 700;
+            font-size: .85em;
             transition: .2s;
         }
 
-        .board-reset.arm {
-            background: rgba(248, 113, 113, .15);
-            border-style: solid;
-            color: #f87171;
+        #resetYes {
+            border: none;
+            background: #f87171;
+            color: #3d0d0d;
+        }
+
+        #resetNo {
+            border: 1px solid rgba(255, 255, 255, .25);
+            background: none;
+            color: rgba(255, 255, 255, .7);
         }
 
         .brd-row {
@@ -915,11 +938,17 @@
     <div class="board-ov" id="boardOv">
         <div class="board">
             <div class="board-head">
-                <div class="board-title">🏆 타임어택 TOP 10</div>
+                <div class="board-title"><span id="trophy">🏆</span> 타임어택 TOP 10</div>
                 <button class="board-x" id="boardX">✕</button>
             </div>
             <div id="boardList"></div>
-            <button class="board-reset" id="boardReset">🗑 기록 초기화</button>
+            <div class="reset-row" id="resetRow">
+                <div class="reset-msg">⚠️ 전체 기록을 삭제할까요?</div>
+                <div class="reset-btns">
+                    <button id="resetYes">삭제</button>
+                    <button id="resetNo">취소</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1457,6 +1486,7 @@
 
         function closeBoard() {
             $('boardOv').style.display = 'none';
+            $('resetRow').style.display = 'none';
         }
 
         $('boardX').addEventListener('click', closeBoard);
@@ -1464,24 +1494,24 @@
             if (e.target === $('boardOv')) closeBoard();
         });
 
-        // 기록 초기화 (실수 방지: 3초 안에 한 번 더 눌러야 삭제)
-        let resetArm = null;
-        $('boardReset').addEventListener('click', () => {
-            const b = $('boardReset');
-            if (b.classList.contains('arm')) {
-                clearTimeout(resetArm);
-                lsSet('pkmq_board', '[]');
-                b.classList.remove('arm');
-                b.textContent = '🗑 기록 초기화';
-                renderBoard();
-            } else {
-                b.classList.add('arm');
-                b.textContent = '⚠️ 한 번 더 누르면 전체 기록이 삭제됩니다!';
-                resetArm = setTimeout(() => {
-                    b.classList.remove('arm');
-                    b.textContent = '🗑 기록 초기화';
-                }, 3000);
+        // 히든 기록 초기화: 모달 제목의 🏆를 1.5초 안에 3번 탭하면 삭제 확인 표시
+        let trophyClicks = 0, trophyTimer = null;
+        $('trophy').addEventListener('click', () => {
+            trophyClicks++;
+            clearTimeout(trophyTimer);
+            trophyTimer = setTimeout(() => { trophyClicks = 0 }, 1500);
+            if (trophyClicks >= 3) {
+                trophyClicks = 0;
+                $('resetRow').style.display = 'block';
             }
+        });
+        $('resetYes').addEventListener('click', () => {
+            lsSet('pkmq_board', '[]');
+            $('resetRow').style.display = 'none';
+            renderBoard();
+        });
+        $('resetNo').addEventListener('click', () => {
+            $('resetRow').style.display = 'none';
         });
 
         $('saveBtn').addEventListener('click', () => {
