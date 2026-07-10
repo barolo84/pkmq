@@ -694,17 +694,6 @@
             white-space: nowrap
         }
 
-        .brd-gen {
-            padding: 2px 8px;
-            border-radius: 10px;
-            background: rgba(78, 205, 196, .15);
-            border: 1px solid rgba(78, 205, 196, .35);
-            color: #4ECDC4;
-            font-size: .78em;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-
         .brd-score { color: #FFD700; font-weight: 900 }
         .brd-date { color: rgba(255, 255, 255, .35); font-size: .85em }
 
@@ -1021,12 +1010,12 @@
     <div class="board-ov" id="boardOv">
         <div class="board">
             <div class="board-head">
-                <div class="board-title"><span id="trophy">🏆</span> 타임어택 TOP 10</div>
+                <div class="board-title"><span id="trophy">🏆</span> <span id="boardTitle">랭킹 TOP 10</span></div>
                 <button class="board-x" id="boardX">✕</button>
             </div>
             <div id="boardList"></div>
             <div class="reset-row" id="resetRow">
-                <div class="reset-msg">⚠️ 전체 기록을 삭제할까요?</div>
+                <div class="reset-msg" id="resetMsg">⚠️ 기록을 삭제할까요?</div>
                 <div class="reset-btns">
                     <button id="resetYes">삭제</button>
                     <button id="resetNo">취소</button>
@@ -1078,14 +1067,22 @@
             }
         } catch (e) { }
 
-        async function fetchBoard() {
+        // 세대별 필터는 클라이언트에서 처리 (Firestore 복합 인덱스 불필요)
+        async function fetchScores() {
             if (db) {
                 try {
-                    const snap = await db.collection('scores').orderBy('s', 'desc').limit(10).get();
+                    const snap = await db.collection('scores').orderBy('s', 'desc').limit(300).get();
                     return snap.docs.map(d => d.data());
                 } catch (e) { }
             }
             return loadBoard();
+        }
+
+        // 해당 세대의 TOP 10 (과거 기록 중 세대 정보 없는 것은 전체로 취급)
+        function boardFor(scores, gen) {
+            return scores.filter(r => (r.g ?? 0) === gen)
+                .sort((a, b) => b.s - a.s)
+                .slice(0, 10);
         }
 
         // ===== 타임어택 상태 =====
@@ -1618,7 +1615,7 @@
             fbEl.textContent = ''; fbEl.className = 'fb';
             nxtEl.style.display = 'none';
             $('taScore').textContent = `${correct}마리 맞췄어요!`;
-            const board = await fetchBoard();
+            const board = boardFor(await fetchScores(), curGen);
             const qualifies = correct > 0 && (board.length < 10 || correct > board[board.length - 1].s);
             $('nameRow').style.display = qualifies ? 'flex' : 'none';
             $('taTitle').textContent = qualifies ? '🎉 TOP 10 진입!' : '⏱️ 타임어택 종료!';
@@ -1633,29 +1630,44 @@
                 ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
 
-        function renderBoard(board, hlEntry = null) {
+        let boardGen = 0, boardScores = [], boardHl = null;
+
+        function boardGenLabel() {
+            return boardGen === 0 ? '전체' : boardGen + '세대';
+        }
+
+        function renderBoard() {
+            const board = boardFor(boardScores, boardGen);
             if (!board.length) {
                 $('boardList').innerHTML = '<div class="board-empty">아직 기록이 없어요. 타임어택에 도전해보세요!</div>';
                 return;
             }
-            const hl = hlEntry
-                ? board.findIndex(r => r.n === hlEntry.n && r.s === hlEntry.s && r.d === hlEntry.d)
+            const hl = boardHl
+                ? board.findIndex(r => r.n === boardHl.n && r.s === boardHl.s && r.d === boardHl.d)
                 : -1;
             const medals = ['🥇', '🥈', '🥉'];
-            $('boardList').innerHTML = board.map((r, i) =>
-                `<div class="brd-row${i < 3 ? ' top' : ''}${i === hl ? ' me' : ''}">
-                    <span class="brd-rank">${medals[i] || (i + 1)}</span>
+            // 공동 순위: 동점이면 같은 순위, 다음 순위는 건너뜀 (1, 1, 3 ...)
+            let rank = 0, prevScore = null;
+            $('boardList').innerHTML = board.map((r, i) => {
+                if (r.s !== prevScore) { rank = i + 1; prevScore = r.s; }
+                return `<div class="brd-row${rank <= 3 ? ' top' : ''}${i === hl ? ' me' : ''}">
+                    <span class="brd-rank">${medals[rank - 1] || rank}</span>
                     <span class="brd-name">${esc(r.n)}</span>
-                    <span class="brd-gen">${r.g == null ? '' : (r.g === 0 ? '전체' : r.g + '세대')}</span>
                     <span class="brd-score">${r.s}마리</span>
                     <span class="brd-date">${r.d}</span>
-                </div>`).join('');
+                </div>`;
+            }).join('');
         }
 
-        async function openBoard(hlEntry = null) {
+        // 메인 화면에서 선택한 세대의 랭킹을 표시
+        async function openBoard(hlEntry = null, gen = curGen) {
+            boardHl = hlEntry;
+            boardGen = gen;
+            $('boardTitle').textContent = boardGenLabel() + ' 랭킹 TOP 10';
             $('boardOv').style.display = 'flex';
             $('boardList').innerHTML = '<div class="board-empty">불러오는 중...</div>';
-            renderBoard(await fetchBoard(), hlEntry);
+            boardScores = await fetchScores();
+            renderBoard();
         }
 
         function closeBoard() {
@@ -1676,22 +1688,27 @@
             trophyTimer = setTimeout(() => { trophyClicks = 0 }, 1500);
             if (trophyClicks >= 3) {
                 trophyClicks = 0;
+                $('resetMsg').textContent = `⚠️ ${boardGenLabel()} 랭킹을 초기화할까요?`;
                 $('resetRow').style.display = 'block';
             }
         });
         $('resetYes').addEventListener('click', async () => {
             $('resetRow').style.display = 'none';
             $('boardList').innerHTML = '<div class="board-empty">삭제 중...</div>';
+            // 보고 있는 세대의 기록만 삭제 (세대 정보 없는 옛 기록은 전체로 취급)
             if (db) {
                 try {
                     const snap = await db.collection('scores').limit(300).get();
                     const batch = db.batch();
-                    snap.docs.forEach(d => batch.delete(d.ref));
+                    snap.docs.forEach(d => {
+                        if ((d.data().g ?? 0) === boardGen) batch.delete(d.ref);
+                    });
                     await batch.commit();
                 } catch (e) { }
             }
-            lsSet('pkmq_board', '[]');
-            openBoard();
+            lsSet('pkmq_board', JSON.stringify(
+                loadBoard().filter(r => (r.g ?? 0) !== boardGen)));
+            openBoard(null, boardGen);
         });
         $('resetNo').addEventListener('click', () => {
             $('resetRow').style.display = 'none';
@@ -1711,18 +1728,18 @@
                 } catch (e) { }
             }
             if (!shared) {
-                // 오프라인/실패 시 이 기기에만 저장
+                // 오프라인/실패 시 이 기기에만 저장 (세대별 보드라 넉넉히 보관)
                 const board = loadBoard();
                 board.push(entry);
                 board.sort((a, b) => b.s - a.s);
-                lsSet('pkmq_board', JSON.stringify(board.slice(0, 10)));
+                lsSet('pkmq_board', JSON.stringify(board.slice(0, 100)));
             }
             btn.disabled = false; btn.textContent = '기록 저장';
             $('nameRow').style.display = 'none';
             $('taTitle').textContent = shared ? '✅ 기록 저장 완료!' : '✅ 저장 완료 (오프라인: 이 기기에만)';
             sfxCorrect();
             confetti(70, true);
-            openBoard(entry); // 내 기록 강조해서 모달로 표시
+            openBoard(entry, entry.g); // 내 기록이 있는 세대 탭을 강조해서 표시
         });
 
         $('retryBtn').addEventListener('click', () => { sfxNext(); startTA(); });
