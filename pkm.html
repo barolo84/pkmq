@@ -1054,11 +1054,11 @@
         // 세대별 최고 연속 기록 { 0: n, 1: n, ... }
         let bestStreaks = {};
         try { bestStreaks = JSON.parse(lsGet('pkmq_best_streaks', '{}')) || {} } catch (e) { }
-        // 이전 버전의 단일 기록은 전체(0) 기록으로 이관
-        const legacyBest = +lsGet('pkmq_best_streak', 0) || 0;
-        if (legacyBest > (bestStreaks[0] || 0)) {
-            bestStreaks[0] = legacyBest;
+        // 구버전 단일 기록은 폐기 (한 번 이관됐던 전체 기록도 함께 제거)
+        if (lsGet('pkmq_best_streak', null) !== null) {
+            delete bestStreaks[0];
             lsSet('pkmq_best_streaks', JSON.stringify(bestStreaks));
+            try { localStorage.removeItem('pkmq_best_streak') } catch (e) { }
         }
         function bestFor(g) { return bestStreaks[g] || 0 }
         function loadBoard() { try { return JSON.parse(lsGet('pkmq_board', '[]')) || [] } catch (e) { return [] } }
@@ -1090,9 +1090,62 @@
 
         // 해당 세대의 TOP 10 (과거 기록 중 세대 정보 없는 것은 전체로 취급)
         function boardFor(scores, gen) {
-            return scores.filter(r => (r.g ?? 0) === gen)
+            return scores.filter(r => r.n !== STREAK_NAME && (r.g ?? 0) === gen)
                 .sort((a, b) => b.s - a.s)
                 .slice(0, 10);
+        }
+
+        // ===== 최고연속 공유 저장 =====
+        // Firestore 규칙상 scores 컬렉션만 쓸 수 있어서
+        // n='__streak__' 문서(랭킹과 같은 형태)로 세대별 최고연속을 보관.
+        // 수정 권한이 없으므로 갱신은 "새 문서 생성 → 이전 문서 삭제"로 처리.
+        const STREAK_NAME = '__streak__';
+        let streakDocs = {}, remoteStreaks = {};
+
+        async function saveStreakRemote(g, s) {
+            if (!db || s <= (remoteStreaks[g] || 0)) return;
+            const prev = remoteStreaks[g] || 0;
+            remoteStreaks[g] = s; // 연속 갱신 중 중복 쓰기 방지
+            try {
+                const ref = await db.collection('scores').add({
+                    n: STREAK_NAME, s: s, g: g,
+                    d: new Date().toISOString().slice(0, 10)
+                });
+                const old = streakDocs[g];
+                streakDocs[g] = ref.id;
+                if (old && old !== ref.id)
+                    db.collection('scores').doc(old).delete().catch(() => { });
+            } catch (e) { remoteStreaks[g] = prev; } // 실패 시 다음 갱신 때 재시도
+        }
+
+        // 시작 시 서버 기록과 로컬 기록을 병합 (높은 쪽 우선)
+        async function syncStreaks() {
+            if (!db) return;
+            try {
+                const snap = await db.collection('scores').where('n', '==', STREAK_NAME).get();
+                const byGen = {};
+                snap.docs.forEach(doc => {
+                    const g = doc.data().g ?? 0;
+                    (byGen[g] ??= []).push(doc);
+                });
+                let changed = false;
+                for (const g in byGen) {
+                    const docs = byGen[g].sort((a, b) => (b.data().s || 0) - (a.data().s || 0));
+                    streakDocs[g] = docs[0].id;
+                    remoteStreaks[g] = docs[0].data().s || 0;
+                    docs.slice(1).forEach(d => d.ref.delete().catch(() => { })); // 중복 정리
+                    if (remoteStreaks[g] > bestFor(+g)) {
+                        bestStreaks[g] = remoteStreaks[g];
+                        changed = true;
+                    }
+                }
+                if (changed) lsSet('pkmq_best_streaks', JSON.stringify(bestStreaks));
+                if (!taMode) $('s4').textContent = bestFor(curGen);
+                // 로컬 기록이 더 높은 세대는 서버로 올림
+                for (const g in bestStreaks) {
+                    if (bestStreaks[g] > (remoteStreaks[g] || 0)) saveStreakRemote(+g, bestStreaks[g]);
+                }
+            } catch (e) { }
         }
 
         // ===== 타임어택 상태 =====
@@ -1430,6 +1483,7 @@
                     bestStreaks[curGen] = streak;
                     lsSet('pkmq_best_streaks', JSON.stringify(bestStreaks));
                     if (!taMode) $('s4').textContent = streak;
+                    saveStreakRemote(curGen, streak);
                 }
                 reveal();
                 msg = streak >= 3 ? `🎉 정답! ${streak}연속 완벽해요! 🔥` : '🎉 정답! 맞췄어요!';
@@ -1712,7 +1766,9 @@
                     const snap = await db.collection('scores').limit(300).get();
                     const batch = db.batch();
                     snap.docs.forEach(d => {
-                        if ((d.data().g ?? 0) === boardGen) batch.delete(d.ref);
+                        const r = d.data();
+                        // 최고연속 문서는 랭킹 초기화에서 제외
+                        if (r.n !== STREAK_NAME && (r.g ?? 0) === boardGen) batch.delete(d.ref);
                     });
                     await batch.commit();
                 } catch (e) { }
@@ -1813,6 +1869,7 @@
         $('s4').textContent = bestFor(curGen);
         shuffleDeck();
         nextPoke();
+        syncStreaks();
     </script>
 </body>
 
