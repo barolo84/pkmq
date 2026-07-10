@@ -1051,7 +1051,16 @@
         // ===== 기록 저장 (이 브라우저의 localStorage — 기기별 저장) =====
         function lsGet(k, d) { try { return localStorage.getItem(k) ?? d } catch (e) { return d } }
         function lsSet(k, v) { try { localStorage.setItem(k, v) } catch (e) { } }
-        let bestStreak = +lsGet('pkmq_best_streak', 0) || 0;
+        // 세대별 최고 연속 기록 { 0: n, 1: n, ... }
+        let bestStreaks = {};
+        try { bestStreaks = JSON.parse(lsGet('pkmq_best_streaks', '{}')) || {} } catch (e) { }
+        // 이전 버전의 단일 기록은 전체(0) 기록으로 이관
+        const legacyBest = +lsGet('pkmq_best_streak', 0) || 0;
+        if (legacyBest > (bestStreaks[0] || 0)) {
+            bestStreaks[0] = legacyBest;
+            lsSet('pkmq_best_streaks', JSON.stringify(bestStreaks));
+        }
+        function bestFor(g) { return bestStreaks[g] || 0 }
         function loadBoard() { try { return JSON.parse(lsGet('pkmq_board', '[]')) || [] } catch (e) { return [] } }
 
         // ===== 공유 랭킹 (Firestore) — 실패 시 localStorage 폴백 =====
@@ -1280,6 +1289,7 @@
             curGen = g;
             pool = g === 0 ? [...PD] : PD.filter(p => p.g === g);
             if (taMode) { startTA(); return; }
+            $('s4').textContent = bestFor(g); // 선택한 세대의 최고연속 표시
             resetStats();
             nextPoke();
         });
@@ -1416,10 +1426,10 @@
                 correct++; streak++;
                 $('sc').textContent = correct;
                 $('ss').textContent = streak;
-                if (streak > bestStreak) {
-                    bestStreak = streak;
-                    lsSet('pkmq_best_streak', bestStreak);
-                    if (!taMode) $('s4').textContent = bestStreak;
+                if (streak > bestFor(curGen)) {
+                    bestStreaks[curGen] = streak;
+                    lsSet('pkmq_best_streaks', JSON.stringify(bestStreaks));
+                    if (!taMode) $('s4').textContent = streak;
                 }
                 reveal();
                 msg = streak >= 3 ? `🎉 정답! ${streak}연속 완벽해요! 🔥` : '🎉 정답! 맞췄어요!';
@@ -1757,7 +1767,7 @@
             $('hint').style.display = 'block';
             $('s4l').textContent = '🏆 최고연속';
             const s4 = $('s4');
-            s4.textContent = bestStreak;
+            s4.textContent = bestFor(curGen);
             s4.classList.remove('low');
             resetStats();
             nextPoke();
@@ -1800,7 +1810,7 @@
         updateGArrows();
 
         // 시작
-        $('s4').textContent = bestStreak;
+        $('s4').textContent = bestFor(curGen);
         shuffleDeck();
         nextPoke();
     </script>
