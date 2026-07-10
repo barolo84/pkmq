@@ -686,6 +686,7 @@
         .brd-row.top { font-weight: 700 }
 
         .brd-rank { width: 30px; text-align: center; flex-shrink: 0 }
+        .brd-rank.medal { font-size: 1.35em }
 
         .brd-name {
             flex: 1;
@@ -1651,7 +1652,7 @@
             $('boardList').innerHTML = board.map((r, i) => {
                 if (r.s !== prevScore) { rank = i + 1; prevScore = r.s; }
                 return `<div class="brd-row${rank <= 3 ? ' top' : ''}${i === hl ? ' me' : ''}">
-                    <span class="brd-rank">${medals[rank - 1] || rank}</span>
+                    <span class="brd-rank${rank <= 3 ? ' medal' : ''}">${medals[rank - 1] || rank}</span>
                     <span class="brd-name">${esc(r.n)}</span>
                     <span class="brd-score">${r.s}마리</span>
                     <span class="brd-date">${r.d}</span>
