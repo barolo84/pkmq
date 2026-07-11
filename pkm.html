@@ -234,6 +234,8 @@
         }
 
         .pimg.sil {
+            /* 실루엣 진입은 즉시 — transition이 걸리면 캐시된 이미지가 컬러로 보였다가 검어짐 */
+            transition: none;
             filter: brightness(0) drop-shadow(0 0 4px rgba(0, 0, 0, .3))
         }
 
